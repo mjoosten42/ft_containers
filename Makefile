@@ -1,35 +1,40 @@
 NAME = ft_containers
-CPP = c++
-CPPFLAGS = -std=c++98 -Wall -Werror -Wextra
+CXX = c++
+CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -MMD -MP
 INC = -I include
 
-SRC =	main.cpp	\
+SRCDIR = src
+SRC = $(shell find $(SRCDIR) -name '*.cpp' -exec basename {} \;)
 
-OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
 OBJDIR = obj
+OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
+
+DEP = $(OBJ:.o=.d)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CPP) $^ -o $@
+	$(CXX) $< -o $@
 
-$(OBJDIR)/%.o: src/%.cpp | $(OBJDIR)
-	$(CPP) $(CPPFLAGS) -c $^ $(INC) -o $@
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< $(INC) -o $@
 
 $(OBJDIR):
-	mkdir $@
+	mkdir -p $@
 
 clean:
-	rm -rf $(OBJDIR)
+	$(RM) -r $(OBJDIR)
 
 fclean: clean
 	$(RM) $(NAME)
 
-re: fclean all
+re: fclean
+	make all
 
-test:
-	$(CPP) $(CPPFLAGS) src/std::vector.cpp -o std::vector
-	./std::vector
-	@rm std::vector
+std: fclean
+std: CXXFLAGS += -D STD
+std: all
 
 .PHONY = clean fclean re
+
+-include $(DEP)
