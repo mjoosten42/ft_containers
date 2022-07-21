@@ -4,7 +4,7 @@
 	//	https://en.cppreference.com/w/cpp/algorithm
 
 #include <memory> // std::allocator
-#include <iostream> // << overload
+#include <cstddef> // std::size_t, std::ptrdiff_t
 
 namespace ft 
 {
@@ -31,178 +31,159 @@ namespace ft
 
 			//	Constructors
 
-			//	Default
-			vector(): _capacity(0), _begin(NULL), _end(NULL) {}
-
-			//	Custom allocator
-			explicit	vector(const Allocator& alloc): _allocator(alloc), _capacity(0), _begin(NULL), _end(NULL) {}
-		
+			vector(): _capacity(0), _size(0), _data(NULL) {}
+			~vector() { _allocator.deallocate(_data, _capacity); };
+			explicit	vector(const Allocator& alloc): _allocator(alloc), _capacity(0), _size(0), _data(NULL) {}
+			explicit	vector(const vector& rhs): _capacity(0), _size(0), _data(NULL) { *this = rhs; }
+	
 			//	Initialize with values
 			explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
-				: _allocator(alloc), _capacity(n), _begin(_allocator.allocate(_capacity)), _end(_begin + _capacity) {
-				std::fill(_begin, _end, value);
+				: _allocator(alloc), _capacity(n), _size(n), _data(_allocator.allocate(n)) {
+				std::fill(begin(), end(), value);
 			}
 
 			//	Range constructor
-			template <typename InputIterator>
-			vector(InputIterator first, InputIterator last, const Allocator& alloc = Allocator(),
-				typename enable_if<is_pointer<InputIterator>::value, bool>::type = true)
-				: _allocator(alloc), _capacity(0), _begin(NULL), _end(NULL) {
+			template <typename InputIt>
+			vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
+				typename enable_if<is_pointer<InputIt>::value, bool>::type = true)
+				: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
 				//	TODO: contiguous iterator -> reserve() + std::fill 
 				for (; first != last; first++)
 					push_back(*first);
 			}
 
-			//	Copy constructor
-			explicit	vector( const vector& rhs ): _capacity(0), _begin(NULL), _end(NULL) { *this = rhs; }
-
-			//	Destructor
-			~vector() {
-				_allocator.deallocate(_begin, _capacity);
-			};
-	
 			// Copy assignment
 			vector&	operator=( const vector& rhs ) {
-				if (this == &rhs)
-					return *this;
-				_allocator.deallocate(_begin, _capacity);
-				_allocator = rhs._allocator;
-				_capacity = rhs._capacity;
-				_begin = _allocator.allocate(_capacity);
-				_end = _begin + rhs.size();
-				std::copy(rhs.begin(), rhs.end(), _begin);
+				if (this != &rhs) {
+					if (_capacity != rhs.capacity()) {
+						_allocator.deallocate(_data, _capacity);
+						_data = rhs.get_allocator().allocate(rhs.capacity());
+						_capacity = rhs.capacity();
+					}
+					_allocator = rhs.get_allocator();
+					_size = rhs.size();
+					std::copy(rhs.begin(), rhs.end(), begin());
+				}
 				return *this;
 			}
 
-			Allocator	get_allocator() const {
-				return _allocator;
+			void	assign(size_type n, const T& value) { // TODO
+				(void)n, (void)value;
 			}
+		
+			Allocator	get_allocator() const { return _allocator; }
 
 			//	Element access
 		
 			reference	at(size_type index) const {
-				if (index >= size())
+				if (index >= _size)
 					throw std::out_of_range("vector");
-				return _begin[index];
+				return _data[index];
 			}
 		
 			reference	operator[](size_type index) const {
-				return _begin[index];
+				return _data[index];
 			}
 					
-			reference	front() const {
-				return *_begin;
-			}
-		
-			reference	back() const {
-				return *(_end - 1);
-			}
-
-			T*	data() const {
-				return _begin;
-			}
+			reference	front() const { return *begin(); }
+			reference	back() const { return *(end() - 1); }
+			T*			data() const { return _data; }
 		
 			//	Iterators
-		
-			iterator	begin() const {
-				return _begin;
-			}
 
-			iterator	end() const {
-				return _end;
-			}
-
-			reverse_iterator	rbegin() const { // TODO
-				return _end;
-			}
-			
-			reverse_iterator	rend() const { // TODO
-				return _begin;
-			}
+			iterator			begin() const {	return _data; }
+			iterator			end() const { return begin() + _size; }
+			reverse_iterator	rbegin() const { return end(); } // TODO
+			reverse_iterator	rend() const { return begin(); } // TODO
 
 			//	Capacity
 	
-			bool	empty() const {
-				return size() == 0;
-			}
-
-			size_type	size() const {
-				return _end - _begin;
-			}
-
-			size_type	max_size() const {
-				return _allocator.max_size();
-			}
-
-			void	reserve(size_type n) {
+			bool		empty() const { return _size == 0; }
+			size_type	size() const { return _size; }
+			size_type	max_size() const { return _allocator.max_size(); }
+			size_type	capacity() const { return _capacity; }
+		
+			void		reserve(size_type n) {
 				if (n > _capacity)
 					setCapacity(n);
-			}
-
-			size_type	capacity() const {
-				return _capacity;
 			}
 
 			//	Modifiers
 
 			void	clear() {
-				_end = _begin;
+				_size = 0;
 			}
 
-			void	insert(iterator pos, const T& value) { // TODO
-				*pos = value;
+			iterator	insert(iterator pos, const T& value) {
+				insert(pos, 1, value);
+				return pos;
 			}
 	
+			void	insert(iterator pos, size_type n, const T& value) {
+				shoveRight(pos, n);
+				std::fill(pos, pos + n, value);
+				_size += n;
+			}
+
+			template <typename InputIt>
+			void	insert(iterator pos, InputIt first, InputIt last,
+			typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
+				for (; first != last; first++) {
+					insert(pos, *first);
+				}
+			}
+
 			void	erase( iterator pos) {	// TODO
 				(void)pos;
 			}
 		
 			void	push_back(const T& value) {
-				if (size() == _capacity)
+				if (_size == _capacity)
 					setCapacity(_capacity ? _capacity * 2 : 1);
-				*_end = value;
-				_end++;
+				*end() = value;
+				_size++;
 			}
 			void	pop_back() {
-				_end--;
+				_size--;
 			}
 
 			void	resize(size_type n, T value = T()) {
-				(void)n, (void)value;
+				reserve(n);
+				insert(end(), n - _size, value);
 			}
 
-			void	swap(vector& other) { // TODO: switch pointers
-				vector	tmp = *this;
-
-				*this = other;
-				other = tmp;
+			void	swap(vector& other) {
+				std::swap(_allocator, other._allocator);
+				std::swap(_capacity, other._capacity);
+				std::swap(_size, other._size);
+				std::swap(_data, other._data);
 			}
 
 		protected:
 	
 			void	setCapacity(size_type newCapacity) {
-				T*			tmp = _allocator.allocate(newCapacity);
-				size_type	newSize = size();
+				pointer	tmp = _allocator.allocate(newCapacity);
 			
-				std::copy(_begin, _end, tmp);
+				std::copy(begin(), end(), tmp);
+				_allocator.deallocate(_data, _capacity);
 				_capacity = newCapacity;
-				_begin = tmp;
-				_end = tmp + newSize;
+				_data = tmp;
+			}
+
+			void	shoveRight(iterator pos, size_type n) {
+				std::cout << pos << std::endl;
+				reserve(_size + n);
+				std::move_backward(pos, end(), end() - 1 + n);
 			}
 
 		protected:
 
 			Allocator	_allocator;
 			size_type	_capacity;
-			pointer		_begin;
-			pointer		_end;
+			size_type	_size;
+			pointer		_data;
 	
 	}; // class vector
-
-	template <typename T>
-	static void	printOne(const T& value) {
-		std::cout << value << " ";
-	}
 
 } // namespace ft
 

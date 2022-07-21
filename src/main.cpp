@@ -11,20 +11,22 @@
 	using ft::vector;
 #endif
 
-#define PRINT(x) std::cout << std::setw(4) << __LINE__ << "| " << x << std::endl;
+template <typename T>
+void	print(const T& value) {
+	std::cout << value << std::endl;	
+}
 
 template <typename T>
-void	printVector(const vector<T>& v, size_t line) {
-	std::cout << std::setw(4) << line << "| vector: ";
+void	printVector(const vector<T>& v) {
+	std::cout << "size: " << v.size() << ", cap: " << v.capacity() << " { ";
 	for (size_t i = 0; i < v.size(); i++)
 		std::cout << v[i] << ' ';
-	std::cout << std::endl;
+	std::cout << "}\n";
 }
 
 int	main() {
 
-	enable_if<is_pointer<int>::value, int> a; (void)a;
-
+	std::array<int, 10>	array = { 0, 1, 1, 2, 3, 5, 8, 13, 23, 34 };
 
 	std::cout << std::boolalpha;
 
@@ -46,131 +48,139 @@ int	main() {
 		vector<int>::const_reverse_iterator	l; (void)l;
 	}
 
-	std::cout << "    |\n    | Constructors\n";
+	std::cout << "\tConstructors\n";
 
 	{
-		std::array<int, 3>	array = { 0, 1, 2 };
 	
 		vector<int>	v1(3);
 		vector<int>	v2(3, 1);
 		vector<int>	v3(array.begin(), array.end());
 		vector<int>	v4(v1);
-		printVector(v1, __LINE__);
-		printVector(v2, __LINE__); 
-		printVector(v3, __LINE__);
-		printVector(v4, __LINE__);
+		vector<int>	v5;
+		printVector(v1);
+		printVector(v2); 
+		printVector(v3);
+		printVector(v4);
+		printVector(v5);
+		v4.push_back(3);
+		printVector(v4);
+		print(v4.capacity());
 		v4 = v3;
-		printVector(v4, __LINE__);
-		v4 = vector<int>();
-		printVector(v4, __LINE__);
+		printVector(v4);
+		print(v4.capacity());
+		v4 = v5;
+		printVector(v4);
+		print(v4.capacity());
 	}
 
-	std::cout << "    |\n    | Element access\n";
+	std::cout << "\tElement access\n";
 
 	{
 		vector<int>	v;
 
-		int *i = &v.front(); PRINT(i);
-		i = &v.back(); PRINT(i);
-		// PRINT(v[0]); segfault
-		try { PRINT(v.at(0)); }
+		int *i = &v.front(); print(i);
+		i = &v.back(); print(i);
+		// print(v[0]); segfault
+		try { print(v.at(0)); }
 			catch(const std::exception& e) { std::cerr << e.what() << '\n'; }
 		v.push_back(1);
 		v.push_back(2);
 		v.push_back(3);
 		v.push_back(4);
-		PRINT(v.front());
-		PRINT(v.back());
-		try { PRINT(v.at(0)); }
+		print(v.front());
+		print(v.back());
+		try { print(v.at(0)); }
 			catch(const std::exception& e) { std::cerr << e.what() << '\n'; }
-		try { PRINT(v.at(4)); }
+		try { print(v.at(4)); }
 			catch(const std::exception& e) { std::cerr << e.what() << '\n'; }
-		try { PRINT(v[0]); }
-			catch(const std::exception& e) { std::cerr << e.what() << '\n'; }	
-		try { PRINT(v[4]); }
+		try { print(v[0]); }
 			catch(const std::exception& e) { std::cerr << e.what() << '\n'; }	
 	}
 
-	std::cout << "    |\n    | Iterators\n";
+	std::cout << "\tIterators\n";
 
 	{
 		vector<int>	v;
 
-		vector<int>::iterator			begin;
-		vector<int>::iterator			end;
-		vector<int>::reverse_iterator	rbegin;
-		vector<int>::reverse_iterator	rend;
-
-		begin = v.begin();
-		end = v.end();
-		rbegin = v.rbegin();
-		rend = v.rend();
-		PRINT(*(void **)&begin);
-		PRINT(*(void **)&end);
-		PRINT(*(void **)&rbegin);
-		PRINT(*(void **)&rend);
-		for (int i = 0; i < 10; i++)
-			v.push_back(i);
-		begin = v.begin();
-		end = v.end();
-		rbegin = v.rbegin();
-		rend = v.rend();
-		PRINT(*(void **)&begin);
-		PRINT(*(void **)&end);
-		PRINT(*(void **)&rbegin);
-		PRINT(*(void **)&rend);
-		PRINT(*begin);
-		PRINT(*--end);
-		PRINT(*rbegin);
-		PRINT(*--rend);
-
+		vector<int>::iterator					begin;
+		vector<int>::iterator					end;
+		
+		// vector<int>::reverse_iterator		rbegin;
+		// vector<int>::reverse_iterator		rend;
 		// const vector<int>::iterator			cbegin;
 		// const vector<int>::iterator			cend;
 		// const vector<int>::reverse_iterator	crbegin;
 		// const vector<int>::reverse_iterator	crend;
+
+		begin = v.begin();
+		end = v.end();
+
+		// rbegin = v.rbegin();
+		// rend = v.rend();
+		// cbegin = v.cbegin();
+		// cend = v.cend();
+		// crbegin = v.crbegin();
+		// crend = v.crend();
+
+
+		print(*(void **)&begin);
+		print(*(void **)&end);		
+
+		// print(*(void **)&rbegin);
+		// print(*(void **)&rend);
+		// print(*(void **)&cbegin);
+		// print(*(void **)&cend);		
+		// print(*(void **)&crbegin);
+		// print(*(void **)&crend);
+
+		for (int i = 0; i < 10; i++)
+			v.push_back(i);
+
+		begin = v.begin();
+		end = v.end();
+
+		// rbegin = v.rbegin();
+		// rend = v.rend();
+		// cbegin = v.cbegin();
+		// cend = v.cend();
+		// crbegin = v.crbegin();
+		// crend = v.crend();
+
+		print(*(void **)&begin);
+		print(*(void **)&end);
 	
-		// PRINT(*(void **)&cbegin);
-		// PRINT(*(void **)&cend);
-		// PRINT(*(void **)&crbegin);
-		// PRINT(*(void **)&crend);
+		// print(*(void **)&rbegin);
+		// print(*(void **)&rend);
+		// print(*(void **)&cbegin);
+		// print(*(void **)&cend);
+		// print(*(void **)&crbegin);
+		// print(*(void **)&crend);
+	
+		print(*begin);
+		print(*--end);
+
 	}
 
-	std::cout << "    |\n    | Capacity\n";
+	std::cout << "\tCapacity\n";
 
 	{
 		vector<int>	v;
 
-		PRINT(v.empty());
-		PRINT(v.size());
-		PRINT(v.capacity());
+		printVector(v);
 		v.push_back(42);
-		PRINT(v.empty());
-		PRINT(v.size());
-		PRINT(v.capacity());
+		printVector(v);
 		v.pop_back();
-		PRINT(v.empty());
-		PRINT(v.capacity());
-		PRINT(v.max_size());
+		printVector(v);
 	}
 
-	std::cout << "    |\n    | Modifiers\n";
+	std::cout << "\tModifiers\n";
 
 	{
 		vector<int>	v;
 
-		v.clear();
-		v.push_back(42);
-		v.clear();
-		PRINT(v.size());
-		v.push_back(0);
-		v.push_back(1);
-		v.push_back(2);
-		PRINT(v.capacity());
-		v.insert(v.begin() + 1, 1);
-		PRINT(v.capacity());
-		PRINT(v[0]);
-		PRINT(v[1]);
-		PRINT(v[2]);
-		PRINT(v[3]);
+		v.push_back(-42);
+		vector<int>::iterator	begin = v.begin(); (void)begin;
+		v.insert(v.begin(), array.begin(), array.end());
+		printVector(v);
 	}
 }

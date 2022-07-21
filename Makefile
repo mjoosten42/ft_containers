@@ -1,6 +1,12 @@
 NAME = ft_containers
 CXX = c++
 CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -MMD -MP
+
+ifdef DEBUG
+	CXXFLAGS += -g
+	LDFLAGS += -g
+endif
+
 INC = -I include
 
 SRCDIR = src
@@ -14,7 +20,7 @@ DEP = $(OBJ:.o=.d)
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CXX) $< -o $@
+	$(CXX) $(LDFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< $(INC) -o $@

@@ -5,13 +5,11 @@
 
 //	enable_if
 
-template <bool B, typename T>
+template <bool B, typename T = void>
 struct enable_if {};
 
 template <typename T>
-struct enable_if<true, T> {
-	typedef T type;
-};
+struct enable_if<true, T> { typedef T type; };
 
 //	is_pointer
 
@@ -23,5 +21,11 @@ struct	is_pointer<T*>: std::true_type {};
 
 template <typename T>
 struct	is_pointer<T* const>: std::true_type {};
+
+template <typename T>
+struct	is_pointer<T* volatile>: std::true_type {};
+
+template <typename T>
+struct	is_pointer<T* const volatile>: std::true_type {};
 
 #endif // META_HPP
