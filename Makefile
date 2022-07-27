@@ -1,11 +1,11 @@
 NAME = ft_containers
 CXX = c++
-CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -MMD -MP
+CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -Wpedantic -MMD -MP
 
-ifdef DEBUG
+#ifdef DEBUG
 	CXXFLAGS += -g
 	LDFLAGS += -g
-endif
+#endif
 
 INC = -I include
 
