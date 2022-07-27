@@ -47,6 +47,10 @@ int	main() {
 		print(v);
 		v.insert(v.begin(), -1);
 		print(v);
+		v.insert(v.begin() + 1, -2);
+		print(v);
+		v.insert(v.end(), -3);
+		print(v);
 
 		std::fill(v.begin(), v.end(), 3);
 
