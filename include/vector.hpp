@@ -3,7 +3,6 @@
 
 #include <memory> // std::allocator
 #include <cstddef> // std::size_t, std::ptrdiff_t
-#include "iterator.hpp" // iterator, contigousindexterator_tag
 #include "meta.hpp" // enable_if, is_pointer // TODO
 
 namespace ft 
@@ -13,9 +12,6 @@ template <typename T, class Allocator = std::allocator<T> >
 class vector {
 
 	public:
-	
-		//	Forward declaration
-		class vectorIterator;
 	
 		//	Typedefs
 	
@@ -27,7 +23,7 @@ class vector {
 		typedef	const T&		const_reference;
 		typedef	T*				pointer;
 		typedef	const T*		const_pointer;
-		typedef vectorIterator	iterator;
+		typedef T*				iterator;
 		typedef	const T*		const_iterator;
 		typedef	T*				reverse_iterator; // TODO
 		typedef	const T*		const_reverse_iterator; // TODO
@@ -107,8 +103,8 @@ class vector {
 	
 		//	Iterators
 
-		iterator			begin() const {	return iterator(*this, 0); }
-		iterator			end() const { return iterator(*this, _size); }
+		iterator			begin() const {	return _data; }
+		iterator			end() const { return begin() + _size; }
 		reverse_iterator	rbegin() const { return end(); } // TODO
 		reverse_iterator	rend() const { return begin(); } // TODO
 
@@ -135,21 +131,27 @@ class vector {
 		}
 
 		iterator	insert(iterator pos, const T& value) {
+			difference_type	index = pos - begin();
+		
 			insert(pos, 1, value);
-			return pos;
+			return begin() + index;
 		}
 
-		void	insert(iterator pos, size_type n, const T& value) {			
+		void	insert(iterator pos, size_type n, const T& value) {		
+			difference_type	index = pos - begin();
+			
 			shoveRight(pos, n);
-			std::fill_n(pos, n, value);
+			std::fill_n(begin() + index, n, value);
 			_size += n;
 		}
 
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last,
 		typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
+			difference_type	index = pos - begin();
+		
 			for (; first != last; first++)
-				insert(begin() + pos++, *first);
+				insert(begin() + index++, *first);
 		}
 
 		iterator	erase(iterator pos) {
@@ -192,61 +194,6 @@ class vector {
 			std::swap(_data, other._data);
 		}
 		
-		// Iterator
-	
-		class vectorIterator: public ft::iterator<contigous_iterator_tag, T> {
-			public:
-				vectorIterator(const vector& v, size_type n): _v(&v), _index(n) {}
-				vectorIterator(const vectorIterator& rhs) { *this = rhs; }
-				vectorIterator&	operator=(const vectorIterator& other) { _v = other._v; _index = other._index; return *this; }
-			
-				vectorIterator&	operator++() {
-					_index++;
-					return *this;
-				}
-			
-				vectorIterator	operator++(int) {
-					vectorIterator	tmp = *this;
-					++*this;
-					return tmp;
-				}
-			
-				vectorIterator&	operator--() {
-					_index--;
-					return *this;
-				}
-			
-				vectorIterator	operator--(int) {
-					vectorIterator	tmp = *this;
-					--*this;
-					return tmp;
-				}
-
-				reference	operator*() const { return (*_v)[_index]; }
-
-				vectorIterator	operator+(size_type n) {
-					return vectorIterator(*_v, _index + n);
-				}
-			
-				vectorIterator	operator+(const vectorIterator& rhs) {
-					return vectorIterator(*_v, _index + rhs._index);
-				}
-			
-				size_type	operator-(const vectorIterator& rhs) {
-					return _index - rhs._index;
-				}
-			
-			
-				bool	operator==(const vectorIterator& rhs) const { return _index == rhs._index; }
-				bool	operator!=(const vectorIterator& rhs) const { return !(*this == rhs); }
-
-			private:
-				const vector*	_v;
-				std::size_t		_index;
-		};
-		
-		friend class vectorIterator;
-	
 	protected:
 
 		void	setCapacity(size_type newCapacity) {
