@@ -15,18 +15,18 @@ class vector {
 	
 		//	Typedefs
 	
-		typedef T				value_type;
-		typedef Allocator		allocator_type;
-		typedef	std::size_t		size_type;
-		typedef	std::ptrdiff_t	difference_type;
-		typedef	T&				reference;
-		typedef	const T&		const_reference;
-		typedef	T*				pointer;
-		typedef	const T*		const_pointer;
-		typedef T*				iterator;
-		typedef	const T*		const_iterator;
-		typedef	T*				reverse_iterator; // TODO
-		typedef	const T*		const_reverse_iterator; // TODO
+		typedef T									value_type;
+		typedef Allocator							allocator_type;
+		typedef	std::size_t							size_type;
+		typedef	std::ptrdiff_t						difference_type;
+		typedef	T&									reference;
+		typedef	const T&							const_reference;
+		typedef	typename Allocator::pointer			pointer;
+		typedef	typename Allocator::const_pointer	const_pointer;
+		typedef T*									iterator;
+		typedef	const T*							const_iterator;
+		typedef	T*									reverse_iterator; // TODO
+		typedef	const T*							const_reverse_iterator; // TODO
 
 		//	Constructors
 	
@@ -34,12 +34,7 @@ class vector {
 		explicit	vector(const Allocator& alloc): _allocator(alloc), _capacity(0), _size(0), _data(NULL) {}
 		explicit	vector(const vector& rhs): _capacity(0), _size(0), _data(NULL) { *this = rhs; }
 
-		~vector() {
-			clear();
-			_allocator.deallocate(_data, _capacity);
-		};
-	
-		//	Initialize with values
+		//	Initialize with n values
 		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
 			: _allocator(alloc), _capacity(n), _size(0), _data(_allocator.allocate(n)) {
 			assign(n, value);
@@ -53,10 +48,16 @@ class vector {
 			assign(first, last);
 		}
 
+		//	Destructor
+		~vector() {
+			clear();
+			_allocator.deallocate(_data, _capacity);
+		};
+	
 		// Copy assignment
 		vector&	operator=( const vector& rhs ) {
 			if (this == &rhs)
-				return (*this);
+				return *this;
 			if (_capacity < rhs.size()) {
 				clear();
 				_allocator.deallocate(_data, _capacity);
@@ -64,23 +65,28 @@ class vector {
 				_capacity = rhs.capacity();
 			}
 			_allocator = rhs.get_allocator();
-			_size = rhs.size();
-			std::copy(rhs.begin(), rhs.end(), begin());
+			assign(rhs.begin(), rhs.end());
 			return *this;
 		}
 
+		//	Objects beyond size are not constructed, but std::fill would call their destructor because of assignment
 		void	assign(size_type n, const T& value) {
 			reserve(n);
-			std::fill_n(begin(), n, value);
-			_size = n;
+			while (size() > n)
+				pop_back();
+			std::fill_n(begin(), size(), value);
+			while (size() < n)
+				push_back(value);
 		}
 
+		// TODO: ra/contigous iterator specialation
 		template <typename InputIt>
 		void	assign(InputIt first, InputIt last,
 		typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
 			clear();
-			for (; first != last; first++)
+			for (; first != last; first++) {
 				push_back(*first);
+			}
 		}
 	
 		allocator_type	get_allocator() const { return _allocator; }
@@ -88,7 +94,7 @@ class vector {
 		//	Element access
 	
 		reference	at(size_type index) const {
-			if (index >= _size)
+			if (index >= size())
 				throw std::out_of_range("vector");
 			return _data[index];
 		}
@@ -105,8 +111,8 @@ class vector {
 
 		iterator			begin() const {	return _data; }
 		iterator			end() const { return begin() + _size; }
-		reverse_iterator	rbegin() const { return end(); } // TODO
-		reverse_iterator	rend() const { return begin(); } // TODO
+		reverse_iterator	rbegin() const { return end() - 1; } // TODO
+		reverse_iterator	rend() const { return begin() - 1; } // TODO
 
 		//	Capacity
 
@@ -125,9 +131,8 @@ class vector {
 		//	Modifiers
 
 		void	clear() {
-			for (iterator it = begin(); it != end(); it++)
-				_allocator.destroy(&*it);
-			_size = 0;
+			while (size())
+				pop_back();
 		}
 
 		iterator	insert(iterator pos, const T& value) {
@@ -136,15 +141,17 @@ class vector {
 			insert(pos, 1, value);
 			return begin() + index;
 		}
-
+ 
 		void	insert(iterator pos, size_type n, const T& value) {		
 			difference_type	index = pos - begin();
 			
 			shoveRight(pos, n);
-			std::fill_n(begin() + index, n, value);
+			for (size_type i = 0; i < n; i++)
+				_allocator.construct(begin() + index + i, value);
 			_size += n;
 		}
 
+		// TODO: ra/contigous iterator specialization
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last,
 		typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
@@ -155,43 +162,45 @@ class vector {
 		}
 
 		iterator	erase(iterator pos) {
-			std::move(pos + 1, end(), pos);
-			_size--;
-			return pos;
+			return erase(pos, pos + 1);
 		}
 	
 		iterator	erase(iterator first, iterator last) {
 			std::move(last, end(), first);
 			_size -= last - first;
-			return end();
+			return last;
 		}
 	
 		void	push_back(const T& value) {
 			if (_size == _capacity)
 				setCapacity(_capacity ? _capacity * 2 : 1);
-			_allocator.construct(&*end(), value);
+			_allocator.construct(end(), value);
 			_size++;
 		}
 
 		void	pop_back() {
-			_allocator.destroy(&*(end() - 1));
+			_allocator.destroy(end() - 1);
 			_size--;
 		}
 
 		void	resize(size_type n, T value = T()) {
 			reserve(n);
-			for (; n < _size; n++)
-				_allocator.destroy(begin() + n);
-			if (n > _size)
-				insert(end(), n - _size, value);
-			_size = n;
+			while (size() > n)
+				pop_back();
+			if (size() < n)
+				insert(end(), n - size(), value);
 		}
 
 		void	swap(vector& other) {
-			std::swap(_allocator, other._allocator);
-			std::swap(_capacity, other._capacity);
-			std::swap(_size, other._size);
-			std::swap(_data, other._data);
+			vector<T>	tmp;
+
+			tmp = *this;
+			*this = other;
+			other = tmp;
+			// std::swap(_allocator, other._allocator);
+			// std::swap(_capacity, other._capacity);
+			// std::swap(_size, other._size);
+			// std::swap(_data, other._data);
 		}
 		
 	protected:
@@ -199,7 +208,10 @@ class vector {
 		void	setCapacity(size_type newCapacity) {
 			pointer	tmp = _allocator.allocate(newCapacity);
 
-			std::move(begin(), end(), tmp);
+			for (size_type i = 0; i < size(); i++) {
+				_allocator.construct(tmp + i, *(begin() + i));
+				_allocator.destroy(begin() + i);
+			}
 			_allocator.deallocate(_data, _capacity);
 			_capacity = newCapacity;
 			_data = tmp;
@@ -208,8 +220,12 @@ class vector {
 		void	shoveRight(iterator pos, size_type n) {
 			difference_type	index = pos - begin(); // Save index in case of reallocation
 
-			reserve(_size + n);
-			std::move_backward(begin() + index, end(), end() + n);
+			reserve(size() + n);
+			difference_type i = size() - index;
+			while (i--) {
+				_allocator.construct(begin() + index + n + i, *(begin() + index + i));
+				_allocator.destroy(begin() + index + i);
+			}
 		}
 
 	protected:

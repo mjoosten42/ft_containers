@@ -41,6 +41,6 @@ std: fclean
 std: CXXFLAGS += -D STD
 std: all
 
-.PHONY = clean fclean re
+.PHONY = clean fclean re std
 
 -include $(DEP)
