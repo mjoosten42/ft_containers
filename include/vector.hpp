@@ -4,6 +4,7 @@
 #include <memory> // std::allocator
 #include <cstddef> // std::size_t, std::ptrdiff_t
 #include "meta.hpp" // enable_if, is_pointer // TODO
+#include "iterator.hpp"
 
 namespace ft 
 {
@@ -21,12 +22,12 @@ class vector {
 		typedef	std::ptrdiff_t						difference_type;
 		typedef	T&									reference;
 		typedef	const T&							const_reference;
-		typedef	typename Allocator::pointer			pointer;
-		typedef	typename Allocator::const_pointer	const_pointer;
+		typedef	T*									pointer;
+		typedef	const T*							const_pointer;
 		typedef T*									iterator;
 		typedef	const T*							const_iterator;
-		typedef	T*									reverse_iterator; // TODO
-		typedef	const T*							const_reverse_iterator; // TODO
+		typedef	reverseIterator<T>					reverse_iterator;
+		typedef reverseIterator<const T>			const_reverse_iterator;
 
 		//	Constructors
 	
@@ -43,7 +44,7 @@ class vector {
 		//	Range constructor
 		template <typename InputIt>
 		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
-			typename enable_if<is_pointer<InputIt>::value, bool>::type = true)
+		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true)
 			: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
 			assign(first, last);
 		}
@@ -82,7 +83,7 @@ class vector {
 		// TODO: ra/contigous iterator specialation
 		template <typename InputIt>
 		void	assign(InputIt first, InputIt last,
-		typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
+		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
 			clear();
 			for (; first != last; first++) {
 				push_back(*first);
@@ -110,9 +111,9 @@ class vector {
 		//	Iterators
 
 		iterator			begin() const {	return _data; }
-		iterator			end() const { return begin() + _size; }
-		reverse_iterator	rbegin() const { return end() - 1; } // TODO
-		reverse_iterator	rend() const { return begin() - 1; } // TODO
+		iterator			end() const { return begin() + size(); }
+		reverse_iterator	rbegin() const { return reverse_iterator(end()); }
+		reverse_iterator	rend() const { return reverse_iterator(begin()); }
 
 		//	Capacity
 
@@ -136,14 +137,14 @@ class vector {
 		}
 
 		iterator	insert(iterator pos, const T& value) {
-			difference_type	index = pos - begin();
+			difference_type	index = pos - begin(); // Save index in case of reallocation
 		
 			insert(pos, 1, value);
 			return begin() + index;
 		}
  
 		void	insert(iterator pos, size_type n, const T& value) {		
-			difference_type	index = pos - begin();
+			difference_type	index = pos - begin(); // Save index in case of reallocation
 			
 			shoveRight(pos, n);
 			for (size_type i = 0; i < n; i++)
@@ -154,11 +155,14 @@ class vector {
 		// TODO: ra/contigous iterator specialization
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last,
-		typename enable_if<std::is_pointer<InputIt>::value, bool>::type = true) {
-			difference_type	index = pos - begin();
-		
-			for (; first != last; first++)
-				insert(begin() + index++, *first);
+		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
+			difference_type	index = pos - begin(); // Save index in case of reallocation
+			vector<T>		tmp(first, last);
+
+			shoveRight(pos, tmp.size());
+			for (size_type i = 0; i < tmp.size(); i++)
+				_allocator.construct(begin() + index + i, tmp[i]);
+			_size += tmp.size();
 		}
 
 		iterator	erase(iterator pos) {
@@ -168,7 +172,7 @@ class vector {
 		iterator	erase(iterator first, iterator last) {
 			std::move(last, end(), first);
 			_size -= last - first;
-			return last;
+			return first;
 		}
 	
 		void	push_back(const T& value) {
@@ -192,15 +196,10 @@ class vector {
 		}
 
 		void	swap(vector& other) {
-			vector<T>	tmp;
-
-			tmp = *this;
-			*this = other;
-			other = tmp;
-			// std::swap(_allocator, other._allocator);
-			// std::swap(_capacity, other._capacity);
-			// std::swap(_size, other._size);
-			// std::swap(_data, other._data);
+			std::swap(_allocator, other._allocator);
+			std::swap(_capacity, other._capacity);
+			std::swap(_size, other._size);
+			std::swap(_data, other._data);
 		}
 		
 	protected:
@@ -235,9 +234,8 @@ class vector {
 		size_type	_size;
 		pointer		_data;
 
-	friend std::ostream&	operator<<(std::ostream& os, const vector<T>& v) {
+	friend std::ostream&	operator<<(std::ostream& os, const vector<T>& v) { // TODO: remove
 		std::cout << "size: " << std::setw(2) << v.size();
-		std::cout << ", cap: " << std::setw(2) << v.capacity();
 		std::cout << " { ";
 		for (size_t i = 0; i < v.size(); i++) {
 			if (i)
@@ -249,6 +247,44 @@ class vector {
 	}
 
 }; // class vector
+
+// Comparison operators
+
+template <typename T, class Allocator>
+bool	operator==(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	if (lhs.size() != rhs.size())
+		return false;
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <typename T, class Allocator>
+bool	operator!=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return !(lhs == rhs);
+}
+
+template <typename T, class Allocator>
+bool	operator<(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template <typename T, class Allocator>
+bool	operator<=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return lhs < rhs || lhs == rhs;
+}
+
+template <typename T, class Allocator>
+bool	operator>(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return rhs < lhs;
+}
+
+template <typename T, class Allocator>
+bool	operator>=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return rhs <= lhs;
+}
+
+// swap
+template <typename T, class Allocator>
+void	swap(vector<T, Allocator>& lhs, vector<T, Allocator>& rhs) { lhs.swap(rhs); }
 
 } // namespace ft
 

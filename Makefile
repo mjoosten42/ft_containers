@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -Wpedantic -MMD -MP
 INC = -I include
 
 SRCDIR = src
-SRC = $(shell find $(SRCDIR) -name '*.cpp' -exec basename {} \;)
+SRC = main.cpp
 
 OBJDIR = obj
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
