@@ -27,12 +27,12 @@ class stack {
 		void	push(const T& value) { _v.push_back(value); }
 		void	pop(const T& value) { _v.pop_back(value); }
 		
-		friend bool	operator==(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.v == rhs._v; }
-		friend bool	operator!=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._v != rhs._v; }
-		friend bool	operator<(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._v < rhs._v; }
-		friend bool	operator<=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._v <= rhs._v; }
-		friend bool	operator>(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._v > rhs._v; }
-		friend bool	operator>=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._v >= rhs._v; }
+		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs.v == rhs._v; }
+		friend bool	operator!=(const stack& lhs, const stack& rhs) { return lhs._v != rhs._v; }
+		friend bool	operator<(const stack& lhs, const stack& rhs) { return lhs._v < rhs._v; }
+		friend bool	operator<=(const stack& lhs, const stack& rhs) { return lhs._v <= rhs._v; }
+		friend bool	operator>(const stack& lhs, const stack& rhs) { return lhs._v > rhs._v; }
+		friend bool	operator>=(const stack& lhs, const stack& rhs) { return lhs._v >= rhs._v; }
 	
 	private:
 		Container	_v;

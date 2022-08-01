@@ -1,5 +1,6 @@
+#include "redBlackTree.hpp"
 #include "test.hpp"
 
 int	main() {
-	ft::stack<A>	s;
+	ft::redBlackTree<int>	rbt;
 }

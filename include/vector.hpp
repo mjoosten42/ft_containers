@@ -22,8 +22,8 @@ class vector {
 		typedef	std::ptrdiff_t						difference_type;
 		typedef	T&									reference;
 		typedef	const T&							const_reference;
-		typedef	T*									pointer;
-		typedef	const T*							const_pointer;
+		typedef	typename Allocator::pointer			pointer;
+		typedef	typename Allocator::const_pointer	const_pointer;
 		typedef T*									iterator;
 		typedef	const T*							const_iterator;
 		typedef	reverseIterator<T>					reverse_iterator;

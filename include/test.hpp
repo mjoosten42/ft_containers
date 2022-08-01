@@ -4,21 +4,10 @@
 #include <iostream> // std::cout
 #include <iomanip> // std::setw
 
-#define RED "\033[0;31m"
-#define BLUE "\033[0;36m"
-#define GREEN "\033[0;32m"
-#define DEFAULT "\033[0m"
-
-#ifdef STD 
-	#include <vector>
-	#include <stack>
-	#include <map>
-	namespace ft = std;
-#else
-	#include "vector.hpp"
-	#include "stack.hpp"
-	// #include "map.hpp"
-#endif
+#define COLOR_RED "\033[0;31m"
+#define COLOR_BLUE "\033[0;36m"
+#define COLOR_GREEN "\033[0;32m"
+#define COLOR_DEFAULT "\033[0m"
 
 template <typename T>
 void	print(const T& value) {
@@ -31,19 +20,19 @@ struct A {
 	public:
 		A(int n = 1): _p(new int), _index(count++) { 
 			#ifdef PRINT
-			std::cout << GREEN "new A: " << _index << DEFAULT << std::endl;
+			std::cout << COLOR_GREEN "new A: " << _index << COLOR_DEFAULT << std::endl;
 			#endif
 			*_p = n;
 		}
 		~A() {
 			#ifdef PRINT
-			std::cout << RED "delete A: " << _index << DEFAULT << std::endl;
+			std::cout << COLOR_RED "delete A: " << _index << COLOR_DEFAULT << std::endl;
 			#endif
 			delete _p;
 		}
 		A(const A& a): _p(new int), _index(count++) { *_p = *a._p;
 			#ifdef PRINT
-			std::cout <<  BLUE "copy A: " << _index << DEFAULT << std::endl;
+			std::cout <<  COLOR_BLUE "copy A: " << _index << COLOR_DEFAULT << std::endl;
 			#endif
 		}
 		A&	operator=(const A& a) {
