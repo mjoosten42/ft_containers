@@ -59,11 +59,9 @@ class vector {
 		vector&	operator=( const vector& rhs ) {
 			if (this == &rhs)
 				return *this;
-			if (_capacity < rhs.size()) {
+			if (_data) {
 				clear();
-				_allocator.deallocate(_data, _capacity);
-				_data = rhs.get_allocator().allocate(rhs.capacity());
-				_capacity = rhs.capacity();
+				_allocator.deallocate(_data, capacity());
 			}
 			_allocator = rhs.get_allocator();
 			assign(rhs.begin(), rhs.end());
