@@ -150,6 +150,7 @@ class vector {
 			_size += n;
 		}
 
+		// TODO: remove std:: (possibly)
 		// TODO: ra/contigous iterator specialization
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last,

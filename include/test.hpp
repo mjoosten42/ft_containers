@@ -42,6 +42,7 @@ struct A {
 			return *this;
 		}
 		int p() const { return *_p; }
+		operator	int() const { return *_p; }
 		friend std::ostream& operator<<(std::ostream& os, const A& a) { return os << *a._p; }
 		friend bool	operator==(const A& lhs, const A& rhs) { return lhs.p() == rhs.p(); }
 		friend bool	operator!=(const A& lhs, const A& rhs) { return lhs.p() != rhs.p(); }
