@@ -4,10 +4,9 @@
 #include <array>
 
 int	main() {
-	std::array<A, 9>				array = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
-	int								size = sizeof(array) / sizeof(array[0]);
-	ft::redBlackTree<A>				rbt;
-	ft::redBlackTree<A>::iterator	it;
+	std::array<A, 9>	array = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
+	int					size = sizeof(array) / sizeof(array[0]);
+	ft::redBlackTree<A>	rbt;
 
 	std::cout << std::boolalpha;
 
@@ -17,10 +16,11 @@ int	main() {
 	rbt.print(rbt.root());
 	print("--------------------------");
 
-	for (it = rbt.begin(); it != rbt.end(); it++)
-		print(*it);
 
-	for (ft::redBlackTree<A>::reverse_iterator it = rbt.rbegin(); it != rbt.rend(); it++)
-		print(*it);
+	rbt.erase(13);
+	rbt.print(rbt.root());
+	print("--------------------------");
 
+	for (ft::redBlackTree<A>::iterator it = rbt.begin(); it != rbt.end(); it++)
+		print(*it);
 }

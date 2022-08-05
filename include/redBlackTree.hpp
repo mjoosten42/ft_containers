@@ -15,6 +15,8 @@
 #define RED	0
 #define BLACK 1
 
+#define LEFT_OR_RIGHT_CHILD(node) node->parent->left == node ? &node->parent->left : &node->parent->right
+
 namespace ft
 {
 
@@ -29,7 +31,7 @@ class redBlackTree {
 		char	color;
 
 		Node(const T& value = T()): value(value), parent(NULL), left(NULL), right(NULL), color(RED) {};
-	
+
 		// TODO: remove
 		friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
 			os << "Node: { " << node.value;
@@ -93,7 +95,7 @@ class redBlackTree {
 			friend bool	operator==(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p == rhs._p; }
 			friend bool	operator!=(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p != rhs._p; }
 
-			operator Node*() const { return _p;	}
+			operator Node*() const { return _p; }
 
 		private:
 			Node*	_p;
@@ -269,15 +271,11 @@ class redBlackTree {
 		}
 	
 		void	eraseLeaf(Node* node) {
-			if (node->parent) {
-				if (node->parent->left == node)
-					node->parent->left = NULL;
-				if (node->parent->right == node)
-					node->parent->right = NULL;
-			}
+			if (node->parent)
+				*(LEFT_OR_RIGHT_CHILD(node)) = NULL;
 			else
-				root() = NULL;
-			delete node;
+				_sentinel->left = NULL;
+			deleteNode(node);
 		}
 
 		// TODO: rewrite
@@ -291,9 +289,9 @@ class redBlackTree {
 						node->parent->right = node->left;
 				}
 				else
-					root() = node->left;
+					_sentinel->left = node->left;
 			}
-			if (!node->left && node->right) {
+			else {
 				node->right->parent = node->parent;
 				if (node->parent) {
 					if (node->parent->right == node)
@@ -302,8 +300,13 @@ class redBlackTree {
 						node->parent->left = node->right;
 				}
 				else
-					root() = node->right;
+					_sentinel->left = node->right;
 			}
+		}
+
+		void	deleteNode(Node* node) {
+			_alloc.destroy(node);
+			_alloc.deallocate(node, 1);
 		}
 	
 		NodeAllocator	_alloc;

@@ -21,17 +21,17 @@ class stack {
 		stack&	operator=(const stack& rhs) { _v = rhs._v; }
 
 		reference	top() const { return _v.back(); }
-		size_type	empty() const { return _v.empty(); }
 		size_type	size() const { return _v.size(); }
+		size_type	empty() const { return _v.empty(); }
 	
 		void	push(const T& value) { _v.push_back(value); }
 		void	pop(const T& value) { _v.pop_back(value); }
 		
-		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs.v == rhs._v; }
+		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs._v == rhs._v; }
 		friend bool	operator!=(const stack& lhs, const stack& rhs) { return lhs._v != rhs._v; }
-		friend bool	operator<(const stack& lhs, const stack& rhs) { return lhs._v < rhs._v; }
+		friend bool	operator< (const stack& lhs, const stack& rhs) { return lhs._v <  rhs._v; }
 		friend bool	operator<=(const stack& lhs, const stack& rhs) { return lhs._v <= rhs._v; }
-		friend bool	operator>(const stack& lhs, const stack& rhs) { return lhs._v > rhs._v; }
+		friend bool	operator> (const stack& lhs, const stack& rhs) { return lhs._v >  rhs._v; }
 		friend bool	operator>=(const stack& lhs, const stack& rhs) { return lhs._v >= rhs._v; }
 	
 	private:
