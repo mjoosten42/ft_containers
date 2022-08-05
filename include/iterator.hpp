@@ -44,25 +44,35 @@ struct iterator
 	typedef Reference	reference;
 };
 
-template <typename T>
-class reverseIterator: public iterator<contigous_iterator_tag, T> {
+template <class Iterator>
+class reverseIterator: public iterator<
+		typename iterator_traits<Iterator>::iterator_category,
+		typename iterator_traits<Iterator>::value_type,
+		typename iterator_traits<Iterator>::difference_type,
+		typename iterator_traits<Iterator>::pointer,
+		typename iterator_traits<Iterator>::reference> {
+
 	public:
-		reverseIterator(T* p): _p(p) {}
-		reverseIterator(const reverseIterator& other): _p(other._p) {}
+		typedef Iterator										iterator_type;
+		typedef typename iterator_traits<Iterator>::reference	reference;
 
-		T&  operator*() const { return *(_p - 1); }
-		T&  operator->() const { return _p - 1; }
+		reverseIterator(): _it() {};
+		reverseIterator(const Iterator& it): _it(it) {};
+		reverseIterator(const reverseIterator& other): _it(other._it) {};
 
-		reverseIterator&	operator++() { return *(_p--); }
-		reverseIterator&	operator--() { return *(_p++); }
-		reverseIterator		operator++(int) { reverseIterator tmp = *this; _p--; return tmp; }
-		reverseIterator		operator--(int) { reverseIterator tmp = *this; _p++; return tmp; }
+		reference	operator*() const { Iterator it(_it); return *--it; }
+		reference	operator->() const { return &operator*(); }
+	
+		reverseIterator&	operator++() { --_it; return *this; }
+		reverseIterator&	operator--() { ++_it; return *this; }
+		reverseIterator	operator++(int) { reverseIterator tmp(*this); ++(*this); return tmp; }
+		reverseIterator	operator--(int) { reverseIterator tmp(*this); --(*this); return tmp; }
 
-		friend bool	operator==(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._p == rhs._p; }
-		friend bool	operator!=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._p != rhs._p; }
-
+		friend bool	operator==(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._it == rhs._it; }
+		friend bool	operator!=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs._it != rhs._it; }
+	
 	private:
-		T*  _p;
+		Iterator	_it;
 };
 
 } // namespace ft

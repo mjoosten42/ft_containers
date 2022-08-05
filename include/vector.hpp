@@ -26,8 +26,8 @@ class vector {
 		typedef	typename Allocator::const_pointer	const_pointer;
 		typedef T*									iterator;
 		typedef	const T*							const_iterator;
-		typedef	reverseIterator<T>					reverse_iterator;
-		typedef reverseIterator<const T>			const_reverse_iterator;
+		typedef	reverseIterator<iterator>			reverse_iterator;
+		typedef reverseIterator<const iterator>		const_reverse_iterator;
 
 		//	Constructors
 	
@@ -64,6 +64,7 @@ class vector {
 				_allocator.deallocate(_data, capacity());
 			}
 			_allocator = rhs.get_allocator();
+			_data = _allocator.allocate(rhs.capacity());
 			assign(rhs.begin(), rhs.end());
 			return *this;
 		}

@@ -19,4 +19,8 @@ int	main() {
 
 	for (it = rbt.begin(); it != rbt.end(); it++)
 		print(*it);
+
+	for (ft::redBlackTree<A>::reverse_iterator it = rbt.rbegin(); it != rbt.rend(); it++)
+		print(*it);
+
 }

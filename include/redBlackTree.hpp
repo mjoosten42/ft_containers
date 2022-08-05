@@ -5,14 +5,14 @@
 	// https://visualgo.net/en/bst
 	// https://adtinfo.org/libavl.html/Deleting-from-a-BST.html (erase)
 
-#include <functional> // less
+#include <functional> // std::less
 #include <memory> // std::allocator
 #include "iterator.hpp"
 #include "pair.hpp"
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
 
-#define RED 0
+#define RED	0
 #define BLACK 1
 
 namespace ft
@@ -29,12 +29,24 @@ class redBlackTree {
 		char	color;
 
 		Node(const T& value = T()): value(value), parent(NULL), left(NULL), right(NULL), color(RED) {};
+	
+		// TODO: remove
+		friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
+			os << "Node: { " << node.value;
+			os << ", " << node.parent;
+			os << ", " << node.left;
+			os << ", " << node.right;
+			return os << " }";
+		}
 	};
 
 	struct treeIterator: public ft::iterator<bidirectional_iterator_tag, T> {
 		public:
-			treeIterator(Node *p = NULL): _p(p) {}
+			treeIterator() {};
+			treeIterator(Node *p): _p(p) {}
 			treeIterator(const treeIterator& other): _p(other._p) {};
+
+			treeIterator&	operator=(const treeIterator& other) { _p = other._p; return *this; }
 		
 			T&  operator*() const { return _p->value; }
 			T&  operator->() const { return &_p->value; }
@@ -49,19 +61,35 @@ class redBlackTree {
 				}
 				else {
 					_p = _p->parent;
-					while (_p && q == _p->right) {
+					while (q == _p->right) {
 						q = _p;
 						_p = _p->parent;
 					}
-					if (_p == NULL) // root->parent
-						return *this;
 				}
+				return *this;
+			}
 
+			treeIterator&	operator--() {
+				Node*	q = _p;
+			
+				if (_p->left) {
+					_p = _p->left;
+					while (_p->right)
+						_p = _p->right;
+				}
+				else {
+					_p = _p->parent;
+					while (q == _p->left) {
+						q = _p;
+						_p = _p->parent;
+					}
+				}
 				return *this;
 			}
 
 			treeIterator	operator++(int) { treeIterator tmp (*this); ++*this; return tmp; }
-		
+			treeIterator	operator--(int) { treeIterator tmp (*this); --*this; return tmp; }
+
 			friend bool	operator==(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p == rhs._p; }
 			friend bool	operator!=(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p != rhs._p; }
 
@@ -75,14 +103,15 @@ class redBlackTree {
 
 		// Typedefs
 
-		typedef treeIterator	iterator;
-		typedef std::size_t		size_type;
+		typedef std::size_t						size_type;
+		typedef treeIterator					iterator;
+		typedef reverseIterator<treeIterator>	reverse_iterator;
 	
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 		
-		redBlackTree(): _root(NULL) {};
-		redBlackTree(const redBlackTree& rhs) { *this = rhs; }
-		~redBlackTree() {};
+		redBlackTree(): _sentinel(newNode(T())) {};
+		redBlackTree(const redBlackTree& rhs): _sentinel(newNode(T())) { *this = rhs; }
+		~redBlackTree() {}; // TODO
 		redBlackTree&	operator=(const redBlackTree& rhs) { (void)rhs; }; // TODO
 
 		// Element access
@@ -98,14 +127,19 @@ class redBlackTree {
 		// Iterators
 
 		iterator	begin() const {
-			Node*	p = root();
+			Node*	p = sentinel();
 
-			while (p && p->left)
+			while (p->left)
 				p = p->left;
 			return p;
 		}
 
-		iterator	end() const { return NULL; }
+		iterator	end() const { return sentinel(); }
+
+		reverse_iterator	rbegin() const { return end(); }
+
+		reverse_iterator	rend() const { return begin(); }
+	
 	
 		// Capacity
 
@@ -116,12 +150,12 @@ class redBlackTree {
 
 		void	swap(redBlackTree& other) {
 			std::swap(_alloc);
-			std::swap(root(), other.root());
+			std::swap(sentinel(), other.sentinel());
 		}
 
 		pair<iterator, bool>	insert(const T& value) {
 			Node*	p = root();
-			Node*	q = NULL;
+			Node*	q = sentinel();
 
 			while (p) {
 				q = p;
@@ -134,8 +168,8 @@ class redBlackTree {
 			}
 			Node*	tmp = newNode(value);
 			tmp->parent = q;
-			if (q == NULL)
-				_root = tmp;
+			if (q == sentinel())
+				_sentinel->left = tmp;
 			else if (Comp()(value, q->value))
 				q->left = tmp;
 			else
@@ -215,10 +249,12 @@ class redBlackTree {
 		}
 		
 		// TODO: private
-		Node*	root() const { return _root; }
+		Node*	root() const { return _sentinel->left; }
 
 	private:
 	
+		Node*	sentinel() const { return _sentinel; }
+
 		Node*	newNode(const T& value) {
 			Node*	tmp = _alloc.allocate(1);
 
@@ -240,7 +276,7 @@ class redBlackTree {
 					node->parent->right = NULL;
 			}
 			else
-				_root = NULL;
+				root() = NULL;
 			delete node;
 		}
 
@@ -255,7 +291,7 @@ class redBlackTree {
 						node->parent->right = node->left;
 				}
 				else
-					_root = node->left;
+					root() = node->left;
 			}
 			if (!node->left && node->right) {
 				node->right->parent = node->parent;
@@ -266,12 +302,12 @@ class redBlackTree {
 						node->parent->left = node->right;
 				}
 				else
-					_root = node->right;
+					root() = node->right;
 			}
 		}
 	
 		NodeAllocator	_alloc;
-		Node*			_root;
+		Node*			_sentinel;
 };
 
 } // namespace ft
