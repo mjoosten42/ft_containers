@@ -3,13 +3,64 @@
 
 #include <memory> // std::allocator
 #include <cstddef> // std::size_t, std::ptrdiff_t
-#include "meta.hpp" // enable_if, is_pointer // TODO
+#include "meta.hpp" // enable_if
 #include "iterator.hpp"
 
 namespace ft 
 {
 
 template <typename T, class Allocator = std::allocator<T> >
+class vector;
+
+template <typename T>
+class vectorIterator {
+
+		typedef std::size_t	size_type;
+		typedef vector<T>	vector;
+
+	public:
+		typedef std::random_access_iterator_tag	iterator_category;
+		typedef T								value_type;
+		typedef std::ptrdiff_t					difference_type;
+		typedef T*								pointer;
+		typedef T&								reference;
+	
+		vectorIterator(T** p): _data(p), _index(0) {}
+		vectorIterator(const vectorIterator& other) { *this = other; }
+	
+		vectorIterator&	operator=(const vectorIterator& other) { _data = other._data; _index = other._index; return *this; }
+
+		T&	operator*() const { return (*_data)[_index]; }
+		T*	operator->() const { return *_data + _index; }
+		T*	operator[](size_type n) const { return (*_data)[_index + n]; }
+
+		vectorIterator&	operator++() { _index++; return *this; }
+		vectorIterator&	operator--() { _index--; return *this; }
+	
+		vectorIterator	operator++(int) { vectorIterator tmp(*this); ++(*this); return tmp; }
+		vectorIterator	operator--(int) { vectorIterator tmp(*this); --(*this); return tmp; }
+	
+				vectorIterator	operator+(size_type n) { vectorIterator tmp(*this); tmp._index += n; return tmp; }
+		friend	vectorIterator	operator+(size_type n, const vectorIterator& rhs) { return rhs + n; }
+	
+		vectorIterator	operator-(size_type n) { vectorIterator tmp(*this); tmp._index -= n; return tmp; }
+		difference_type	operator-(const vectorIterator& rhs) { return _index - rhs._index; }
+		
+		bool	operator==(const vectorIterator& rhs) { return _data == rhs._data && _index == rhs._index; }
+		bool	operator!=(const vectorIterator& rhs) { return _data != rhs._data || _index != rhs._index; }
+		bool	operator< (const vectorIterator& rhs) { return _data == rhs._data && _index <  rhs._index; }
+		bool	operator<=(const vectorIterator& rhs) { return _data == rhs._data && _index <= rhs._index; }
+		bool	operator> (const vectorIterator& rhs) { return _data == rhs._data && _index >  rhs._index; }
+		bool	operator>=(const vectorIterator& rhs) { return _data == rhs._data && _index >= rhs._index; }
+
+		operator	pointer() const { return *_data + _index; }
+	
+	private:
+		T**			_data;
+		size_type	_index;
+};
+
+template <typename T, class Allocator>
 class vector {
 
 	public:
@@ -24,8 +75,8 @@ class vector {
 		typedef	const T&							const_reference;
 		typedef	typename Allocator::pointer			pointer;
 		typedef	typename Allocator::const_pointer	const_pointer;
-		typedef T*									iterator;
-		typedef	const T*							const_iterator;
+		typedef vectorIterator<T>					iterator;
+		typedef	vectorIterator<const T>				const_iterator;
 		typedef	reverseIterator<iterator>			reverse_iterator;
 		typedef reverseIterator<const iterator>		const_reverse_iterator;
 
@@ -69,7 +120,6 @@ class vector {
 			return *this;
 		}
 
-		//	Objects beyond size are not constructed, but std::fill would call their destructor because of assignment
 		void	assign(size_type n, const T& value) {
 			reserve(n);
 			while (size() > n)
@@ -79,7 +129,8 @@ class vector {
 				push_back(value);
 		}
 
-		// TODO: ra/contigous iterator specialation
+		// TODO: ra/contigous iterator specialization;
+		// Use template specialization with InputIt::iterator_category
 		template <typename InputIt>
 		void	assign(InputIt first, InputIt last,
 		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
@@ -109,7 +160,7 @@ class vector {
 	
 		//	Iterators
 
-		iterator			begin() const {	return _data; }
+		iterator			begin() const {	return const_cast<T**>(&_data); } // TODO: remove const_cast
 		iterator			end() const { return begin() + size(); }
 		reverse_iterator	rbegin() const { return reverse_iterator(end()); }
 		reverse_iterator	rend() const { return reverse_iterator(begin()); }
@@ -136,18 +187,14 @@ class vector {
 		}
 
 		iterator	insert(iterator pos, const T& value) {
-			difference_type	index = pos - begin(); // Save index in case of reallocation
-		
 			insert(pos, 1, value);
-			return begin() + index;
+			return pos;
 		}
  
-		void	insert(iterator pos, size_type n, const T& value) {		
-			difference_type	index = pos - begin(); // Save index in case of reallocation
-			
+		void	insert(iterator pos, size_type n, const T& value) {
 			shoveRight(pos, n);
 			for (size_type i = 0; i < n; i++)
-				_allocator.construct(begin() + index + i, value);
+				_allocator.construct(pos++, value);
 			_size += n;
 		}
 
@@ -156,12 +203,11 @@ class vector {
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last,
 		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
-			difference_type	index = pos - begin(); // Save index in case of reallocation
-			vector<T>		tmp(first, last);
+			vector<T>	tmp(first, last);
 
 			shoveRight(pos, tmp.size());
 			for (size_type i = 0; i < tmp.size(); i++)
-				_allocator.construct(begin() + index + i, tmp[i]);
+				_allocator.construct(pos + i, tmp[i]);
 			_size += tmp.size();
 		}
 
@@ -202,7 +248,16 @@ class vector {
 			std::swap(_data, other._data);
 		}
 		
-	protected:
+		// Comparison operators
+
+		bool	operator==(const vector& rhs) const { return size() == rhs.size() && std::equal(begin(), end(), rhs.begin()); }
+		bool	operator!=(const vector& rhs) const { return !(*this == rhs); }
+		bool	operator< (const vector& rhs) const { return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());	}
+		bool	operator<=(const vector& rhs) const { return *this < rhs || *this == rhs;	}
+		bool	operator> (const vector& rhs) const { return rhs < *this; }
+		bool	operator>=(const vector& rhs) const { return rhs <= *this; }
+
+	private:
 
 		void	setCapacity(size_type newCapacity) {
 			pointer	tmp = _allocator.allocate(newCapacity);
@@ -217,13 +272,12 @@ class vector {
 		}
 
 		void	shoveRight(iterator pos, size_type n) {
-			difference_type	index = pos - begin(); // Save index in case of reallocation
-
+			size_type	i = end() - pos;
+		
 			reserve(size() + n);
-			difference_type i = size() - index;
 			while (i--) {
-				_allocator.construct(begin() + index + n + i, *(begin() + index + i));
-				_allocator.destroy(begin() + index + i);
+				_allocator.construct(pos + n + i, *(pos + i));
+				_allocator.destroy(pos + i);
 			}
 		}
 
@@ -247,40 +301,6 @@ class vector {
 	}
 
 }; // class vector
-
-// Comparison operators
-
-template <typename T, class Allocator>
-bool	operator==(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	if (lhs.size() != rhs.size())
-		return false;
-	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template <typename T, class Allocator>
-bool	operator!=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	return !(lhs == rhs);
-}
-
-template <typename T, class Allocator>
-bool	operator<(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-}
-
-template <typename T, class Allocator>
-bool	operator<=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	return lhs < rhs || lhs == rhs;
-}
-
-template <typename T, class Allocator>
-bool	operator>(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	return rhs < lhs;
-}
-
-template <typename T, class Allocator>
-bool	operator>=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
-	return rhs <= lhs;
-}
 
 // swap
 template <typename T, class Allocator>

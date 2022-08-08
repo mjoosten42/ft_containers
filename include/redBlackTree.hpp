@@ -7,123 +7,158 @@
 
 #include <functional> // std::less
 #include <memory> // std::allocator
-#include "iterator.hpp"
+#include "iterator.hpp" // reverseIterator
 #include "pair.hpp"
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
+#include <iterator> // bidirectional_iterator_tag
 
-#define RED	0
-#define BLACK 1
+// Get the parent's pointer to this node
+#define PARENTS_CHILD(node) node->parent->left == node ? node->parent->left : node->parent->right
 
-#define LEFT_OR_RIGHT_CHILD(node) node->parent->left == node ? &node->parent->left : &node->parent->right
+// Get this node's left or right child depending on which one exists
+#define LEFT_OR_RIGHT_CHILD(node) node->left ? node->left : node->right
+
+#define AMOUNT_OF_CHILDREN(node) node->left ? node->right ? 2 : 1 : node->right ? 1 : 0
 
 namespace ft
 {
 
+template <typename T>
+struct Node {
+	T		value;
+	Node*	parent;
+	Node*	left;
+	Node*	right;
+	bool	black;
+
+	Node(const T& value = T()): value(value), parent(NULL), left(NULL), right(NULL), black(false) {};
+
+	// TODO: remove
+	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
+		os << "Node: { " << node.value;
+		os << ", " << node.parent;
+		os << ", " << node.left;
+		os << ", " << node.right;
+		os << ", ";
+		if (node.black)
+			os << "black ";
+		else
+			os << "red ";
+		os << " }";
+		return os;
+	}
+};
+
+template <typename T>
+struct treeIterator {
+		typedef Node<T>	Node;
+	public:
+		typedef std::bidirectional_iterator_tag	iterator_category;
+		typedef T								value_type;
+		typedef std::ptrdiff_t					difference_type;
+		typedef T*								pointer;
+		typedef T&								reference;
+	
+		treeIterator() {};
+		treeIterator(Node *p): _p(p) {}
+		treeIterator(const treeIterator& other): _p(other._p) {};
+
+		treeIterator&	operator=(const treeIterator& other) { _p = other._p; return *this; }
+	
+		T&  operator*() const { return _p->value; }
+		T&  operator->() const { return &_p->value; }
+
+		treeIterator&	operator++() {
+			Node*	q = _p;
+		
+			if (_p->right) {
+				_p = _p->right;
+				while (_p->left)
+					_p = _p->left;
+			}
+			else {
+				_p = _p->parent;
+				while (q == _p->right) {
+					q = _p;
+					_p = _p->parent;
+				}
+			}
+			return *this;
+		}
+
+		treeIterator&	operator--() {
+			Node*	q = _p;
+		
+			if (_p->left) {
+				_p = _p->left;
+				while (_p->right)
+					_p = _p->right;
+			}
+			else {
+				_p = _p->parent;
+				while (q == _p->left) {
+					q = _p;
+					_p = _p->parent;
+				}
+			}
+			return *this;
+		}
+
+		treeIterator	operator++(int) { treeIterator tmp (*this); ++*this; return tmp; }
+		treeIterator	operator--(int) { treeIterator tmp (*this); --*this; return tmp; }
+
+		bool	operator==(const treeIterator& rhs) { return _p == rhs._p; }
+		bool	operator!=(const treeIterator& rhs) { return _p != rhs._p; }
+
+		operator Node*() const { return _p; }
+
+	private:
+		Node*	_p;
+};
+
 template <typename T, typename Comp = std::less<T>, typename Allocator = std::allocator<T> >
 class redBlackTree {
 
-	struct Node {
-		T		value;
-		Node*	parent;
-		Node*	left;
-		Node*	right;
-		char	color;
-
-		Node(const T& value = T()): value(value), parent(NULL), left(NULL), right(NULL), color(RED) {};
-
-		// TODO: remove
-		friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
-			os << "Node: { " << node.value;
-			os << ", " << node.parent;
-			os << ", " << node.left;
-			os << ", " << node.right;
-			return os << " }";
-		}
-	};
-
-	struct treeIterator: public ft::iterator<bidirectional_iterator_tag, T> {
-		public:
-			treeIterator() {};
-			treeIterator(Node *p): _p(p) {}
-			treeIterator(const treeIterator& other): _p(other._p) {};
-
-			treeIterator&	operator=(const treeIterator& other) { _p = other._p; return *this; }
-		
-			T&  operator*() const { return _p->value; }
-			T&  operator->() const { return &_p->value; }
-
-			treeIterator&	operator++() {
-				Node*	q = _p;
-			
-				if (_p->right) {
-					_p = _p->right;
-					while (_p->left)
-						_p = _p->left;
-				}
-				else {
-					_p = _p->parent;
-					while (q == _p->right) {
-						q = _p;
-						_p = _p->parent;
-					}
-				}
-				return *this;
-			}
-
-			treeIterator&	operator--() {
-				Node*	q = _p;
-			
-				if (_p->left) {
-					_p = _p->left;
-					while (_p->right)
-						_p = _p->right;
-				}
-				else {
-					_p = _p->parent;
-					while (q == _p->left) {
-						q = _p;
-						_p = _p->parent;
-					}
-				}
-				return *this;
-			}
-
-			treeIterator	operator++(int) { treeIterator tmp (*this); ++*this; return tmp; }
-			treeIterator	operator--(int) { treeIterator tmp (*this); --*this; return tmp; }
-
-			friend bool	operator==(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p == rhs._p; }
-			friend bool	operator!=(const treeIterator& lhs, const treeIterator& rhs) { return lhs._p != rhs._p; }
-
-			operator Node*() const { return _p; }
-
-		private:
-			Node*	_p;
-	};
+		typedef Node<T>	Node;
+		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:
 
 		// Typedefs
 
-		typedef std::size_t						size_type;
-		typedef treeIterator					iterator;
-		typedef reverseIterator<treeIterator>	reverse_iterator;
-	
-		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
+		typedef std::size_t					size_type;
+		typedef treeIterator<T>				iterator;
+		typedef reverseIterator<iterator>	reverse_iterator;
 		
-		redBlackTree(): _sentinel(newNode(T())) {};
-		redBlackTree(const redBlackTree& rhs): _sentinel(newNode(T())) { *this = rhs; }
-		~redBlackTree() {}; // TODO
+		redBlackTree(): _sentinel(newNode(T())), _size(0) {};
+		redBlackTree(const redBlackTree& rhs): _sentinel(newNode(T())), _size(0) { *this = rhs; }
+
+		~redBlackTree() {
+			clear();
+			deleteNode(sentinel());
+		};
+
 		redBlackTree&	operator=(const redBlackTree& rhs) { (void)rhs; }; // TODO
+
+		Allocator	get_allocator() const { return _alloc; }
 
 		// Element access
 
+		T&	at(const T& value) {
+			iterator it = find(value);
+
+			if (it == end())
+				throw std::out_of_range("map");
+			return *it;
+		}
+	
 		T&	operator[](const T& value) {
 			iterator it = find(value);
 		
-			if (it != end())
-				return *it;
-			return *insert(value).first;
+			if (it == end())
+				return *insert(value).first;
+			return *it;
 		}
 
 		// Iterators
@@ -136,19 +171,22 @@ class redBlackTree {
 			return p;
 		}
 
-		iterator	end() const { return sentinel(); }
-
+		iterator			end() const { return sentinel(); }
 		reverse_iterator	rbegin() const { return end(); }
-
 		reverse_iterator	rend() const { return begin(); }
 	
 	
 		// Capacity
 
-		bool		empty() const { return root() == NULL; }
-		size_type	size() const { return sizeHelper(root()); }
+		bool		empty() const { return size() == 0; }
+		size_type	size() const { return _size; }
 	
 		// Modifiers
+
+		void	clear() {
+			destroySubtree(root());
+			sentinel()->left = NULL;
+		}
 
 		void	swap(redBlackTree& other) {
 			std::swap(_alloc);
@@ -171,7 +209,7 @@ class redBlackTree {
 			Node*	tmp = newNode(value);
 			tmp->parent = q;
 			if (q == sentinel())
-				_sentinel->left = tmp;
+				sentinel()->left = tmp;
 			else if (Comp()(value, q->value))
 				q->left = tmp;
 			else
@@ -182,12 +220,33 @@ class redBlackTree {
 		void	erase(iterator pos) {
 			Node*	node = pos;
 
-			if (!node->left && !node->right)
-				eraseLeaf(node);
-			else if (node->left && node->right)
-				(void)node;
-			else
-				eraseOneChild(node);
+			switch (AMOUNT_OF_CHILDREN(node)) {
+				case 0:
+					(PARENTS_CHILD(node)) = NULL;
+					deleteNode(node);
+					break;
+				case 1:
+					(LEFT_OR_RIGHT_CHILD(node))->parent = node->parent;
+					PARENTS_CHILD(node) = LEFT_OR_RIGHT_CHILD(node);
+					deleteNode(node);
+					break;
+				case 2:
+					Node*	successor = node->right;
+
+					while (successor->left)
+						successor = successor->left;
+					std::swap(node->value, successor->value);
+					erase(successor);
+			}
+		}
+	
+		void	erase(iterator first, iterator last) {
+			iterator it;
+
+			for (first++; first != last; first++) {
+				it = first;
+				erase(--it);
+			}
 		}
 	
 		size_type	erase(const T& value) {
@@ -214,9 +273,9 @@ class redBlackTree {
 				else if (Comp()(p->value, value))
 					p = p->right;
 				else
-					break ;
+					return p;
 			}
-			return p;
+			return end();
 		}
 		
 		// first element >= value
@@ -238,79 +297,50 @@ class redBlackTree {
 		}
 	
 		// TODO: remove
-		void	print(Node *node, int spaces = 0) const {
+		void	print() { printTree(root()); }
+		void	printTree(Node *node, int spaces = 0) const {
 			if (!node)
 				return ;
 			spaces += 8;
-			print(node->right, spaces);
+			printTree(node->right, spaces);
 			std::cout << std::endl;
 			for (int i = 8; i < spaces; i++)
         		std::cout << " ";
 			std::cout << std::setw(2) << node->value << std::endl;
-			print(node->left, spaces);
+			printTree(node->left, spaces);
 		}
 		
-		// TODO: private
-		Node*	root() const { return _sentinel->left; }
 
 	private:
 	
 		Node*	sentinel() const { return _sentinel; }
+		Node*	root() const { return sentinel()->left; }
 
 		Node*	newNode(const T& value) {
 			Node*	tmp = _alloc.allocate(1);
 
 			_alloc.construct(tmp, value);
+			_size++;
 			return tmp;
 		}
 	
-		size_type	sizeHelper(Node* node) const {
-			if (!node)
-				return 0;
-			return sizeHelper(node->left) + 1 + sizeHelper(node->right);
-		}
-	
-		void	eraseLeaf(Node* node) {
-			if (node->parent)
-				*(LEFT_OR_RIGHT_CHILD(node)) = NULL;
-			else
-				_sentinel->left = NULL;
-			deleteNode(node);
-		}
-
-		// TODO: rewrite
-		void	eraseOneChild(Node* node) {
-			if (node->left && !node->right) {
-				node->left->parent = node->parent;
-				if (node->parent) {
-					if (node->parent->left == node)
-						node->parent->left = node->left;
-					else
-						node->parent->right = node->left;
-				}
-				else
-					_sentinel->left = node->left;
-			}
-			else {
-				node->right->parent = node->parent;
-				if (node->parent) {
-					if (node->parent->right == node)
-						node->parent->right = node->right;
-					else
-						node->parent->left = node->right;
-				}
-				else
-					_sentinel->left = node->right;
-			}
-		}
-
 		void	deleteNode(Node* node) {
 			_alloc.destroy(node);
 			_alloc.deallocate(node, 1);
+			_size--;
 		}
 	
+		void	destroySubtree(Node *node) {
+			if (!node)
+				return ;
+			destroySubtree(node->left);
+			destroySubtree(node->right);
+			deleteNode(node);
+		}
+
 		NodeAllocator	_alloc;
 		Node*			_sentinel;
+		size_type		_size;
 };
 
 } // namespace ft

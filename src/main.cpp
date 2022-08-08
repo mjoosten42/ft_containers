@@ -2,6 +2,7 @@
 #include "test.hpp"
 #include <algorithm>
 #include <array>
+#include <map>
 
 int	main() {
 	std::array<A, 9>	array = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
@@ -10,17 +11,13 @@ int	main() {
 
 	std::cout << std::boolalpha;
 
-	for (int i = 0; i != size; i++)
+	for (int i = 0; i < size; i++)
 		rbt.insert(array[i]);
 
-	rbt.print(rbt.root());
+	rbt.print();
 	print("--------------------------");
 
-
-	rbt.erase(13);
-	rbt.print(rbt.root());
+	rbt.erase(8);
+	rbt.print();
 	print("--------------------------");
-
-	for (ft::redBlackTree<A>::iterator it = rbt.begin(); it != rbt.end(); it++)
-		print(*it);
 }
