@@ -19,30 +19,19 @@ struct pair {
 		return *this;
 	}
 
+	bool	operator==(const pair& rhs) { return first == rhs.first && second == rhs.second; }
+	bool	operator!=(const pair& rhs) { return first != rhs.first || second != rhs.second; }
+	bool	operator< (const pair& rhs) { return first <  rhs.first || (first == rhs.first && second < rhs.second); }
+	bool	operator<=(const pair& rhs) { return *this <  rhs || *this == rhs; }
+	bool	operator> (const pair& rhs) { return rhs <= *this; }
+	bool	operator>=(const pair& rhs) { return rhs <  *this || *this == rhs; }
+
 	T1	first;
 	T2	second;
 };
 
 template <typename T1, typename T2>
 pair<T1, T2>	make_pair(T1 t, T2 u) { return pair<T1, T2>(t, u); }
-
-template <typename T1, typename T2>
-bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return lhs.first == rhs.first && lhs.second == rhs.second; }
-
-template <typename T1, typename T2>
-bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return !(lhs == rhs); }
-
-template <typename T1, typename T2>
-bool operator< (const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second); }
-
-template <typename T1, typename T2>
-bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return lhs < rhs || lhs == rhs; }
-
-template <typename T1, typename T2>
-bool operator> (const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return rhs <= lhs; }
-
-template <typename T1, typename T2>
-bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) { return rhs < lhs || lhs == rhs; }
 
 } // namespace ft
 

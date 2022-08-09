@@ -115,6 +115,7 @@ struct treeIterator {
 
 template <typename T, typename Comp = std::less<T>, typename Allocator = std::allocator<T> >
 class tree {
+	protected:
 
 		typedef Node<T>	Node;
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
@@ -334,7 +335,7 @@ class tree {
 		}
 		
 
-	private:
+	protected:
 	
 		Node*	sentinel() const { return _sentinel; }
 		Node*	root() const { return sentinel()->left; }

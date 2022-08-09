@@ -18,7 +18,7 @@ void	print(const T& value) {
 struct A {
 		static int count;
 	public:
-		A(int n = 1): _p(new int), _index(count++) { 
+		A(int n = 0): _p(new int), _index(count++) { 
 			#ifdef PRINT
 				std::cout << COLOR_GREEN "new A: " << _index << COLOR_DEFAULT << std::endl;
 			#endif
