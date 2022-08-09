@@ -1,16 +1,16 @@
-#ifndef REDBLACKTREE_HPP
-#define REDBLACKTREE_HPP
+#ifndef TREE_HPP
+#define TREE_HPP
 
 	// https://www.programiz.com/dsa/insertion-in-a-red-black-tree
 	// https://adtinfo.org/libavl.html/Deleting-from-a-BST.html (erase)
 
 #include <functional> // std::less
 #include <memory> // std::allocator
+#include <iterator> // bidirectional_iterator_tag
 #include "iterator.hpp" // reverseIterator
 #include "pair.hpp"
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
-#include <iterator> // bidirectional_iterator_tag
 
 // Get the parent's pointer to this node
 #define PARENTS_CHILD(node) node->parent->left == node ? node->parent->left : node->parent->right
