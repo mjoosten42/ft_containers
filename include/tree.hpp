@@ -2,7 +2,6 @@
 #define REDBLACKTREE_HPP
 
 	// https://www.programiz.com/dsa/insertion-in-a-red-black-tree
-	// https://visualgo.net/en/bst
 	// https://adtinfo.org/libavl.html/Deleting-from-a-BST.html (erase)
 
 #include <functional> // std::less
@@ -21,6 +20,9 @@
 
 #define AMOUNT_OF_CHILDREN(node) node->left ? node->right ? 2 : 1 : node->right ? 1 : 0
 
+// Compare a node with a value
+#define COMPARE(node, value) _comp(value, node->value) ? node->left : node->right 
+
 namespace ft
 {
 
@@ -30,9 +32,8 @@ struct Node {
 	Node*	parent;
 	Node*	left;
 	Node*	right;
-	bool	black;
 
-	Node(const T& value = T()): value(value), parent(NULL), left(NULL), right(NULL), black(false) {};
+	Node(const T& value): value(value), left(NULL), right(NULL) {};
 
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
@@ -40,11 +41,6 @@ struct Node {
 		os << ", " << node.parent;
 		os << ", " << node.left;
 		os << ", " << node.right;
-		os << ", ";
-		if (node.black)
-			os << "black ";
-		else
-			os << "red ";
 		os << " }";
 		return os;
 	}
@@ -118,7 +114,7 @@ struct treeIterator {
 };
 
 template <typename T, typename Comp = std::less<T>, typename Allocator = std::allocator<T> >
-class redBlackTree {
+class tree {
 
 		typedef Node<T>	Node;
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
@@ -131,15 +127,23 @@ class redBlackTree {
 		typedef treeIterator<T>				iterator;
 		typedef reverseIterator<iterator>	reverse_iterator;
 		
-		redBlackTree(): _sentinel(newNode(T())), _size(0) {};
-		redBlackTree(const redBlackTree& rhs): _sentinel(newNode(T())), _size(0) { *this = rhs; }
+		tree(): _alloc(), _comp(), _sentinel(newNode()) {};
+		tree(const tree& rhs): _sentinel(NULL) { *this = rhs; }
 
-		~redBlackTree() {
+		~tree() {
 			clear();
 			deleteNode(sentinel());
 		};
 
-		redBlackTree&	operator=(const redBlackTree& rhs) { (void)rhs; }; // TODO
+		tree&	operator=(const tree& rhs) {
+			if (sentinel())
+				destroySubtree(sentinel());
+			_alloc = rhs.get_allocator();
+			_comp = rhs.value_comp();
+			_sentinel = newNode();
+			insert(rhs.begin(), rhs.end());
+			return *this;
+		}
 
 		Allocator	get_allocator() const { return _alloc; }
 
@@ -179,7 +183,8 @@ class redBlackTree {
 		// Capacity
 
 		bool		empty() const { return size() == 0; }
-		size_type	size() const { return _size; }
+		size_type	size() const { return std::distance(begin(), end()); }
+		size_type	max_size() const { return _alloc.max_size(); }
 	
 		// Modifiers
 
@@ -188,33 +193,38 @@ class redBlackTree {
 			sentinel()->left = NULL;
 		}
 
-		void	swap(redBlackTree& other) {
+		void	swap(tree& other) {
 			std::swap(_alloc);
+			std::swap(_comp);
 			std::swap(sentinel(), other.sentinel());
 		}
 
 		pair<iterator, bool>	insert(const T& value) {
+			Node*	tmp;
 			Node*	p = root();
 			Node*	q = sentinel();
 
 			while (p) {
 				q = p;
-				if (Comp()(value, p->value))
+				if (_comp(value, p->value))
 					p = p->left;
-				else if (Comp()(p->value, value))
+				else if (_comp(p->value, value))
 					p = p->right;
 				else
 					return make_pair<iterator, bool>(p, false);
 			}
-			Node*	tmp = newNode(value);
-			tmp->parent = q;
+			tmp = newNode(value, q);
 			if (q == sentinel())
 				sentinel()->left = tmp;
-			else if (Comp()(value, q->value))
-				q->left = tmp;
 			else
-				q->right = tmp;
+				(COMPARE(q, value)) = tmp;
 			return make_pair<iterator, bool>(tmp, true);
+		}
+	
+		template <typename InputIt>
+		void	insert(InputIt first, InputIt last) {
+			for (; first != last; first++)
+				insert(*first);
 		}
 
 		void	erase(iterator pos) {
@@ -227,7 +237,7 @@ class redBlackTree {
 					break;
 				case 1:
 					(LEFT_OR_RIGHT_CHILD(node))->parent = node->parent;
-					PARENTS_CHILD(node) = LEFT_OR_RIGHT_CHILD(node);
+					(PARENTS_CHILD(node)) = LEFT_OR_RIGHT_CHILD(node);
 					deleteNode(node);
 					break;
 				case 2:
@@ -243,7 +253,8 @@ class redBlackTree {
 		void	erase(iterator first, iterator last) {
 			iterator it;
 
-			for (first++; first != last; first++) {
+			while (first != last) {
+				first++;
 				it = first;
 				erase(--it);
 			}
@@ -268,9 +279,9 @@ class redBlackTree {
 			Node*	p = root();
 	
 			while (p) {
-				if (Comp()(value, p->value))
+				if (_comp(value, p->value))
 					p = p->left;
-				else if (Comp()(p->value, value))
+				else if (_comp(p->value, value))
 					p = p->right;
 				else
 					return p;
@@ -278,11 +289,15 @@ class redBlackTree {
 			return end();
 		}
 		
+		pair<iterator, iterator>	equal_range(const T& value) {
+			return make_pair(lower_bound(value), upper_bound(value));
+		}
+
 		// first element >= value
 		iterator	lower_bound(const T& value) {
 			iterator it = begin();
 
-			while (Comp()(*it, value))
+			while (_comp(*it, value))
 				it++;
 			return it;
 		}
@@ -291,13 +306,21 @@ class redBlackTree {
 		iterator	upper_bound(const T& value) {
 			iterator it = lower_bound(value);
 
-			if (!Comp()(value, *it))
+			if (!_comp(value, *it))
 				it++;
 			return it;
 		}
 	
+		// Observers
+
+		Comp	value_comp() const { return _comp; }
+	
 		// TODO: remove
-		void	print() { printTree(root()); }
+		void	print() { 
+			printTree(root()); 
+			std::cout << "--------------------------" << std::endl;
+		}
+	
 		void	printTree(Node *node, int spaces = 0) const {
 			if (!node)
 				return ;
@@ -316,18 +339,17 @@ class redBlackTree {
 		Node*	sentinel() const { return _sentinel; }
 		Node*	root() const { return sentinel()->left; }
 
-		Node*	newNode(const T& value) {
+		Node*	newNode(const T& value = T(), Node* parent = NULL) {
 			Node*	tmp = _alloc.allocate(1);
 
 			_alloc.construct(tmp, value);
-			_size++;
+			tmp->parent = parent;
 			return tmp;
 		}
 	
 		void	deleteNode(Node* node) {
 			_alloc.destroy(node);
 			_alloc.deallocate(node, 1);
-			_size--;
 		}
 	
 		void	destroySubtree(Node *node) {
@@ -339,10 +361,10 @@ class redBlackTree {
 		}
 
 		NodeAllocator	_alloc;
+		Comp			_comp;
 		Node*			_sentinel;
-		size_type		_size;
 };
 
 } // namespace ft
 
-#endif // REDBLACKTREE_HPP
+#endif // TREE_HPP
