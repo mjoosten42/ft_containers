@@ -250,9 +250,9 @@ class vector {
 		
 		// Comparison operators
 
-		bool	operator==(const vector& rhs) const { return size() == rhs.size() && std::equal(begin(), end(), rhs.begin()); }
+		bool	operator==(const vector& rhs) const { return size() == rhs.size() && std::equal(begin(), end(), rhs.begin()); } // TODO: std --> ft
 		bool	operator!=(const vector& rhs) const { return !(*this == rhs); }
-		bool	operator< (const vector& rhs) const { return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());	}
+		bool	operator< (const vector& rhs) const { return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end()); } // TODO: std --> ft
 		bool	operator<=(const vector& rhs) const { return *this < rhs || *this == rhs;	}
 		bool	operator> (const vector& rhs) const { return rhs < *this; }
 		bool	operator>=(const vector& rhs) const { return rhs <= *this; }

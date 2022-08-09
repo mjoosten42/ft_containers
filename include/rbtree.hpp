@@ -9,21 +9,30 @@
 namespace ft
 {
 
+template <typename T>
+struct rbtreeNode: public treeNode<T> {
+	bool	black;
+};
+
 template <typename T, typename Comp = std::less<T>, typename Allocator = std::allocator<T> >
 class rbtree: public tree<T, Comp, Allocator> {
 
 		typedef tree<T, Comp, Allocator>	tree;
-		typedef typename tree::Node			Node;
+		typedef rbtreeNode<T>				Node;
+			
+		using	tree::begin;
+		using	tree::sentinel;
 
 	public:
 
 		typedef typename tree::size_type	size_type;
 		typedef typename tree::iterator		iterator;
 
+
 		rbtree() {};
 		rbtree(const rbtree& rhs) { *this = rhs; }
 		~rbtree() {};
-		rbtree&	operator=(const rbtree& rhs) { tree::operator=(rhs); return *this; } // TODO
+		rbtree&	operator=(const rbtree& rhs) { tree::operator=(rhs); return *this; }
 
 		pair<iterator, bool>	insert(const T& value) {
 			pair<iterator, bool> ret = tree::insert(value);
@@ -32,16 +41,25 @@ class rbtree: public tree<T, Comp, Allocator> {
 			return ret;
 		}
 	
-		size_type	depth(Node* node = tree::sentinel()) {
-			return 0; (void)node;
+		size_type	depth(Node* node = begin()) {
+			size_type	n = 0;
+
+			while (node->parent != sentinel()) {
+				if (node->black)
+					n++;
+				node = node->parent;
+			}
+			return n;
 		}
 
 		size_type	height() const {
-			Node*		p = tree::sentinel();
+			Node*		node = sentinel();
 			size_type	n = 0;
 
-			while ((p = p->left))
-				n++;
+			while ((node = node->left)) {
+				if (node->black)
+					n++;
+			}
 			return n;
 		}
 	private:

@@ -18,8 +18,6 @@
 // Get this node's left or right child depending on which one exists
 #define LEFT_OR_RIGHT_CHILD(node) node->left ? node->left : node->right
 
-#define AMOUNT_OF_CHILDREN(node) node->left ? node->right ? 2 : 1 : node->right ? 1 : 0
-
 // Compare a node with a value
 #define COMPARE(node, value) _comp(value, node->value) ? node->left : node->right 
 
@@ -27,16 +25,16 @@ namespace ft
 {
 
 template <typename T>
-struct Node {
-	T		value;
-	Node*	parent;
-	Node*	left;
-	Node*	right;
+struct treeNode {
+	T			value;
+	treeNode*	parent;
+	treeNode*	left;
+	treeNode*	right;
 
-	Node(const T& value): value(value), left(NULL), right(NULL) {};
+	treeNode(const T& value): value(value), left(NULL), right(NULL) {};
 
 	// TODO: remove
-	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
+	friend std::ostream&	operator<<(std::ostream& os, const treeNode& node) {
 		os << "Node: { " << node.value;
 		os << ", " << node.parent;
 		os << ", " << node.left;
@@ -48,7 +46,7 @@ struct Node {
 
 template <typename T>
 struct treeIterator {
-		typedef Node<T>	Node;
+		typedef treeNode<T>	Node;
 	public:
 		typedef std::bidirectional_iterator_tag	iterator_category;
 		typedef T								value_type;
@@ -117,7 +115,7 @@ template <typename T, typename Comp = std::less<T>, typename Allocator = std::al
 class tree {
 	protected:
 
-		typedef Node<T>	Node;
+		typedef treeNode<T>	Node;
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:
@@ -231,7 +229,7 @@ class tree {
 		void	erase(iterator pos) {
 			Node*	node = pos;
 
-			switch (AMOUNT_OF_CHILDREN(node)) {
+			switch (amountOfChildren(node)) {
 				case 0:
 					(PARENTS_CHILD(node)) = NULL;
 					deleteNode(node);
@@ -361,6 +359,10 @@ class tree {
 			deleteNode(node);
 		}
 
+		size_type	amountOfChildren(Node *node) {
+			return node->left ? node->right ? 2 : 1 : node->right ? 1 : 0;
+		}
+	
 		NodeAllocator	_alloc;
 		Comp			_comp;
 		Node*			_sentinel;

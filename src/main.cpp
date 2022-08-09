@@ -18,6 +18,4 @@ int	main() {
 	rbtree.print();
 
 	print(rbtree.height());
-	print(rbtree.depth());
-
 }
