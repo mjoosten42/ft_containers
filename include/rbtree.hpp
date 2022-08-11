@@ -16,35 +16,22 @@
 namespace ft
 {
 
+// TODO: use [2] for left/right mirroring
 template <typename T>
 struct Node {
 	T		value;
-	Node*	parent;
 	Node*	left;
+	Node*	parent;
 	Node*	right;
 	bool	black;
 
 	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {};
 
-	void	partialSwap(Node* successor) {
-		std::swap(parent, successor->parent);
-		std::swap(left, successor->left);
-		std::swap(right, successor->right);
-		std::swap(black, successor->black);
-
-		(parent->left == successor ? parent->left : parent->right) = this;
-		(successor->parent->left == this ? successor->parent->left : successor->parent->right) = successor;
-		if (right)
-			right->parent = this;
-		successor->left->parent = successor;
-		successor->right->parent = successor;
-	}
-
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
 		os << "Node: { " << node.value;
-		os << ", " << node.parent;
 		os << ", " << node.left;
+		os << ", " << node.parent;
 		os << ", " << node.right;
 		os << (node.black ? ", black" : ", red");
 		os << " }";
@@ -252,8 +239,8 @@ class rbtree {
 
 				while (successor->left)
 					successor = successor->left;
-				node->partialSwap(successor);
-				return erase(node);
+				std::swap(node->value, successor->value); // TODO
+				return erase(successor);
 			}
 			deleteNode(node);
 		}
