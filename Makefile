@@ -1,6 +1,6 @@
 NAME = ft_containers
 CXX = c++
-CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -Wpedantic -MMD -MP
+CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -Wpedantic -MMD
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
@@ -47,6 +47,3 @@ std: all
 .PHONY = clean fclean re std
 
 -include $(DEP)
-
-#LDFLAGS="-L/Users/mjoosten/.brew/opt/llvm/lib -Wl,-rpath,/Users/mjoosten/.brew/opt/llvm/lib"
-# echo 'export PATH="/Users/mjoosten/.brew/opt/llvm/bin:$PATH"' >> ~/.zshrc

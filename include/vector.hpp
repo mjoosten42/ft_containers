@@ -78,7 +78,7 @@ class vector {
 		typedef vectorIterator<T>					iterator;
 		typedef	vectorIterator<const T>				const_iterator;
 		typedef	reverseIterator<iterator>			reverse_iterator;
-		typedef reverseIterator<const iterator>		const_reverse_iterator;
+		typedef reverseIterator<const_iterator>		const_reverse_iterator;
 
 		//	Constructors
 	

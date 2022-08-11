@@ -14,7 +14,6 @@ int	main() {
 	for (int i = 0; i < size; i++)
 		rbtree[array[i]];
 	
-	
 	rbtree.print();
 
 	rbtree.erase(1);

@@ -26,6 +26,20 @@ struct Node {
 
 	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {};
 
+	void	partialSwap(Node* successor) {
+		std::swap(parent, successor->parent);
+		std::swap(left, successor->left);
+		std::swap(right, successor->right);
+		std::swap(black, successor->black);
+
+		(parent->left == successor ? parent->left : parent->right) = this;
+		(successor->parent->left == this ? successor->parent->left : successor->parent->right) = successor;
+		if (right)
+			right->parent = this;
+		successor->left->parent = successor;
+		successor->right->parent = successor;
+	}
+
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
 		os << "Node: { " << node.value;
@@ -50,9 +64,9 @@ struct rbtreeIterator {
 	
 		rbtreeIterator() {};
 		rbtreeIterator(Node *p): _p(p) {}
-		rbtreeIterator(const rbtreeIterator& other): _p(other._p) {};
+		rbtreeIterator(const rbtreeIterator& successor): _p(successor._p) {};
 
-		rbtreeIterator&	operator=(const rbtreeIterator& other) { _p = other._p; return *this; }
+		rbtreeIterator&	operator=(const rbtreeIterator& successor) { _p = successor._p; return *this; }
 	
 		T&  operator*() const { return _p->value; }
 		T&  operator->() const { return &_p->value; }
@@ -147,7 +161,7 @@ class rbtree {
 			iterator it = find(value);
 
 			if (it == end())
-				throw std::out_of_range("tree");
+				throw std::out_of_range("rbtree");
 			return *it;
 		}
 	
@@ -187,10 +201,10 @@ class rbtree {
 			sentinel()->left = NULL;
 		}
 
-		void	swap(rbtree& other) {
+		void	swap(rbtree& successor) {
 			std::swap(_alloc);
 			std::swap(_comp);
-			std::swap(sentinel(), other.sentinel());
+			std::swap(sentinel(), successor.sentinel());
 		}
 
 		pair<iterator, bool>	insert(const T& value) {
@@ -238,8 +252,8 @@ class rbtree {
 
 				while (successor->left)
 					successor = successor->left;
-				std::swap(node->value, successor->value); // invalidates wrong iterator
-				return erase(successor);
+				node->partialSwap(successor);
+				return erase(node);
 			}
 			deleteNode(node);
 		}
@@ -254,7 +268,7 @@ class rbtree {
 			}
 		}
 	
-		size_type	erase(const T& value) {
+		size_type	erase(const T& value) {			
 			iterator it = find(value);
 
 			if (it == end())
@@ -266,7 +280,7 @@ class rbtree {
 		// Lookup
 
 		size_type	count(const T& value) const {
-			return find(value) != end() ? 1 : 0;
+			return find(value) != end();
 		}
 	
 		iterator	find(const T& value) const {
@@ -329,11 +343,7 @@ class rbtree {
 			std::cout << std::setw(2) << (node->black ? "" : RED) << node->value << DEFAULT << "\n";
 			printTree(node->left, spaces);
 		}
-		
-		void	r() {
-			rotateRight(root());
-		}
-
+	
 	protected:
 	
 		void	rebalance(Node *node) {

@@ -23,8 +23,8 @@ struct pair {
 	bool	operator!=(const pair& rhs) { return first != rhs.first || second != rhs.second; }
 	bool	operator< (const pair& rhs) { return first <  rhs.first || (first == rhs.first && second < rhs.second); }
 	bool	operator<=(const pair& rhs) { return *this <  rhs || *this == rhs; }
-	bool	operator> (const pair& rhs) { return rhs <= *this; }
-	bool	operator>=(const pair& rhs) { return rhs <  *this || *this == rhs; }
+	bool	operator> (const pair& rhs) { return !(rhs <= *this); }
+	bool	operator>=(const pair& rhs) { return !(rhs <  *this); }
 
 	T1	first;
 	T2	second;
