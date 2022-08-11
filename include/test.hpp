@@ -11,7 +11,7 @@
 
 template <typename T>
 void	print(const T& value) {
-	std::cout << value << std::endl;	
+	std::cout << value << "\n";
 }
 
 // #define PRINT
@@ -19,23 +19,22 @@ struct A {
 		static int count;
 	public:
 		A(int n = 0): _p(new int), _index(count++) { 
-			#ifdef PRINT
-				std::cout << COLOR_GREEN "new A: " << _index << COLOR_DEFAULT << std::endl;
-			#endif
+				#ifdef PRINT
+					std::cout << COLOR_GREEN "new: " << _index << COLOR_DEFAULT << "\n";
+				#endif
 			*_p = n;
 		}
 		~A() {
-			#ifdef PRINT
-				std::cout << COLOR_RED "delete A: " << _index << COLOR_DEFAULT << std::endl;
-			#endif
+				#ifdef PRINT
+					std::cout << COLOR_RED "delete: " << _index << COLOR_DEFAULT << "\n";
+				#endif
 			delete _p;
 		}
-		A(const A& a): _p(new int), _index(count++) { *_p = *a._p;
-			#ifdef PRINT
-				std::cout <<  COLOR_BLUE "copy A: " << _index << COLOR_DEFAULT << std::endl;
-			#endif
-		}
+		A(const A& other): _p(new int), _index(count++) { *this = other; }
 		A&	operator=(const A& a) {
+				#ifdef PRINT
+					std::cout << COLOR_BLUE "copy: " << _index << COLOR_DEFAULT << "\n";
+				#endif
 			delete _p;
 			_p = new int;
 			*_p = *a._p;
@@ -43,12 +42,11 @@ struct A {
 		}
 		int p() const { return *_p; }
 		operator	int() const { return *_p; }
-		friend std::ostream& operator<<(std::ostream& os, const A& a) { return os << *a._p; }
-		friend bool	operator< (const A& lhs, const A& rhs) { return lhs.p() <  rhs.p(); }
+		bool	operator<(const A& rhs) { return p() < rhs.p(); }
 	
 	private:
-		int	*_p;
-		int	_index;
+		int*	_p;
+		int		_index;
 };
 
 
