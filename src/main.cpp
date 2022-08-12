@@ -5,7 +5,7 @@
 #include <map>
 
 int	main() {
-	A				array[] = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
+	A				array[] = { 8, 3, 1, 6};//, 4, 7, 10, 14, 13 };
 	int				size = sizeof(array) / sizeof(array[0]);
 	ft::rbtree<A>	rbtree;
 
@@ -15,5 +15,9 @@ int	main() {
 		rbtree[array[i]];
 	
 	rbtree.print();
-	
+
+	ft::rbtree<A>::iterator it = rbtree.begin(); (void)it;
+
+	rbtree.erase(1);
+	rbtree.print();
 }

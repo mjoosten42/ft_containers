@@ -4,6 +4,7 @@
 	// https://www.programiz.com/dsa/insertion-in-a-red-black-tree
 	// https://adtinfo.org/libavl.html/RB-Balancing-Rule.html
 	// https://www.cs.usfca.edu/~galles/visualization/RedBlack.html
+	// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 
 #include <functional> // std::less
 #include <memory> // std::allocator
@@ -12,32 +13,36 @@
 #include "pair.hpp"
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
+#include <initializer_list>
 
 namespace ft
 {
 
-// TODO: use [2] for left/right mirroring
+#define LEFT 0
+#define RIGHT 1
+
 template <typename T>
 struct Node {
 	T		value;
-	Node*	left;
 	Node*	parent;
-	Node*	right;
+	Node*	child[2];
 	bool	black;
 
-	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {};
+	Node(const T& value): value(value), black(false) { child[LEFT] = NULL; child[RIGHT] = NULL; }
 
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
-		os << "Node: { " << node.value;
-		os << ", " << node.left;
+		os << &node;
+		os << " { " << node.value;
+		os << ", " << node.child[LEFT];
 		os << ", " << node.parent;
-		os << ", " << node.right;
-		os << (node.black ? ", black" : ", red");
+		os << ", " << node.child[RIGHT];
+		os << ", " << (node.black ? "black" : "red");
 		os << " }";
 		return os;
 	}
 };
+
 
 template <typename T>
 struct rbtreeIterator {
@@ -51,48 +56,31 @@ struct rbtreeIterator {
 	
 		rbtreeIterator() {};
 		rbtreeIterator(Node *p): _p(p) {}
-		rbtreeIterator(const rbtreeIterator& successor): _p(successor._p) {};
-
-		rbtreeIterator&	operator=(const rbtreeIterator& successor) { _p = successor._p; return *this; }
+		rbtreeIterator(const rbtreeIterator& rhs): _p(rhs._p) {};
+		rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
 	
 		T&  operator*() const { return _p->value; }
 		T&  operator->() const { return &_p->value; }
 
-		rbtreeIterator&	operator++() {
+		rbtreeIterator&	iterate(int dir) {
 			Node*	q = _p;
 		
-			if (_p->right) {
-				_p = _p->right;
-				while (_p->left)
-					_p = _p->left;
+			if (_p->child[dir]) {
+				_p = _p->child[dir];
+				while (_p->child[!dir])
+					_p = _p->child[!dir];
 			}
 			else {
 				_p = _p->parent;
-				while (q == _p->right) {
+				while (q == _p->child[dir]) {
 					q = _p;
 					_p = _p->parent;
 				}
 			}
 			return *this;
 		}
-
-		rbtreeIterator&	operator--() {
-			Node*	q = _p;
-		
-			if (_p->left) {
-				_p = _p->left;
-				while (_p->right)
-					_p = _p->right;
-			}
-			else {
-				_p = _p->parent;
-				while (q == _p->left) {
-					q = _p;
-					_p = _p->parent;
-				}
-			}
-			return *this;
-		}
+		rbtreeIterator&	operator++() { return iterate(RIGHT); }
+		rbtreeIterator&	operator--() { return iterate(LEFT); }
 
 		rbtreeIterator	operator++(int) { rbtreeIterator tmp (*this); ++*this; return tmp; }
 		rbtreeIterator	operator--(int) { rbtreeIterator tmp (*this); --*this; return tmp; }
@@ -117,11 +105,13 @@ class rbtree {
 
 		// Typedefs
 
-		typedef std::size_t					size_type;
-		typedef rbtreeIterator<T>			iterator;
-		typedef reverseIterator<iterator>	reverse_iterator;
+		typedef std::size_t						size_type;
+		typedef rbtreeIterator<T>				iterator;
+		typedef rbtreeIterator<const T>			const_iterator;
+		typedef reverseIterator<iterator>		reverse_iterator;
+		typedef reverseIterator<const_iterator>	const_reverse_iterator;
 		
-		rbtree(): _alloc(), _comp(), _sentinel(newNode(T(), NULL)) { _sentinel->black = true; }
+		rbtree(): _alloc(), _comp(), _sentinel(newNode(T(), NULL)), _size(0) {}
 		rbtree(const rbtree& rhs): _sentinel(NULL) { *this = rhs; }
 
 		~rbtree() {
@@ -135,7 +125,7 @@ class rbtree {
 			_alloc = rhs.get_allocator();
 			_comp = rhs.value_comp();
 			_sentinel = newNode(T(), NULL);
-			_sentinel->black = true;
+			_size = rhs.size();
 			insert(rhs.begin(), rhs.end());
 			return *this;
 		}
@@ -162,30 +152,30 @@ class rbtree {
 
 		// Iterators
 
-		iterator	begin() const {
+		iterator	begin() {
 			Node*	p = sentinel();
 
-			while (p->left)
-				p = p->left;
+			while (p->child[LEFT])
+				p = p->child[LEFT];
 			return p;
 		}
 
-		iterator			end() const { return sentinel(); }
-		reverse_iterator	rbegin() const { return end(); }
-		reverse_iterator	rend() const { return begin(); }
-	
+		iterator			end() { return sentinel(); }
+		reverse_iterator	rbegin() { return end(); }
+		reverse_iterator	rend() { return begin(); }
 	
 		// Capacity
 
 		bool		empty() const { return size() == 0; }
-		size_type	size() const { return std::distance(begin(), end()); }
+		size_type	size() const { return _size; }
 		size_type	max_size() const { return _alloc.max_size(); }
 	
 		// Modifiers
 
 		void	clear() {
 			destroySubtree(root());
-			sentinel()->left = NULL;
+			sentinel()->child[LEFT] = NULL;
+			_size = 0;
 		}
 
 		void	swap(rbtree& successor) {
@@ -202,18 +192,19 @@ class rbtree {
 			while (p) {
 				q = p;
 				if (_comp(value, p->value))
-					p = p->left;
+					p = p->child[LEFT];
 				else if (_comp(p->value, value))
-					p = p->right;
+					p = p->child[RIGHT];
 				else
 					return make_pair<iterator, bool>(p, false);
 			}
 			tmp = newNode(value, q);
 			if (q == sentinel())
-				sentinel()->left = tmp;
+				root() = tmp;
 			else
-				(_comp(value, q->value) ? q->left : q->right) = tmp;
-			rebalance(tmp);
+				q->child[!_comp(value, q->value)] = tmp;
+			_size++;
+			rebalanceInsertion(tmp);
 			return make_pair<iterator, bool>(tmp, true);
 		}
 	
@@ -226,7 +217,7 @@ class rbtree {
 		void	erase(iterator pos) {
 			Node*	node = pos;
 
-			switch (amountOfChildren(node)) {
+			switch (nbChildren(node)) {
 			case 0:
 				parentsChild(node) = NULL;
 				break;
@@ -235,14 +226,16 @@ class rbtree {
 				parentsChild(node) = leftOrRightChild(node);
 				break;
 			case 2:
-				Node*	successor = node->right;
+				Node*	successor = node->child[RIGHT];
 
-				while (successor->left)
-					successor = successor->left;
+				while (successor->child[LEFT])
+					successor = successor->child[LEFT];
 				std::swap(node->value, successor->value); // TODO
 				return erase(successor);
 			}
+			rebalanceDeletion(node);
 			deleteNode(node);
+			_size--;
 		}
 	
 		void	erase(iterator first, iterator last) {
@@ -270,14 +263,14 @@ class rbtree {
 			return find(value) != end();
 		}
 	
-		iterator	find(const T& value) const {
+		iterator	find(const T& value) {
 			Node*	p = root();
 	
 			while (p) {
 				if (_comp(value, p->value))
-					p = p->left;
+					p = p->child[LEFT];
 				else if (_comp(p->value, value))
-					p = p->right;
+					p = p->child[RIGHT];
 				else
 					return p;
 			}
@@ -323,78 +316,69 @@ class rbtree {
 			if (!node)
 				return ;
 			spaces += 8;
-			printTree(node->right, spaces);
+			printTree(node->child[RIGHT], spaces);
 			std::cout << "\n";
 			for (int i = 8; i < spaces; i++)
         		std::cout << " ";
 			std::cout << std::setw(2) << (node->black ? "" : RED) << node->value << DEFAULT << "\n";
-			printTree(node->left, spaces);
+			printTree(node->child[LEFT], spaces);
 		}
 	
 	protected:
 	
-		void	rebalance(Node *node) {
-			Node* u;
-		
-			if (node->parent == root())
-				root()->black = true;
-			if (node->parent->black)
+		void	rebalanceInsertion(Node *node) {
+			root()->black = true;
+			if (node->parent->black || node == root())
 				return ;
 			
-			if ((u = uncle(node)) && !u->black) {
+			Node* 	u = uncle(node);
+			if (u && !u->black) {
 				node->parent->black = true;
 				grandParent(node)->black = false;
 				u->black = true;
-				rebalance(grandParent(node));
+				rebalanceInsertion(grandParent(node));
 				return ;
 			}
 
-			if (leftAligned(node)) {
-				rotateRight(grandParent(node));
-				node->parent->right->black = false;
-				node->parent->black = true;
-			}
-			else if (rightAligned(node)) {
-				rotateLeft(grandParent(node));
-				node->parent->left->black = false;
+			int	a = alignment(node);
+			if (a == LEFT || a == RIGHT) {
+				rotate(grandParent(node), !a);
+				node->parent->child[!a]->black = false;
 				node->parent->black = true;
 			}
 			else {
-				node->parent->left == node ? rotateRight(node->parent) : rotateLeft(node->parent);
-				rebalance(leftOrRightChild(node));
+				node->parent->child[LEFT] == node ? rotate(node->parent, RIGHT) : rotate(node->parent, LEFT);
+				rebalanceInsertion(leftOrRightChild(node));
 			}
 		}
 
-		// Assumes right node exists
-		void	rotateLeft(Node* node) {
-			Node*	right = node->right;
-		
-			node->right = right->left;
-			if (right->left)
-				right->left->parent = node;
+		void	rebalanceDeletion(Node* node) {
+			if ((!node->black && !nbChildren(node)) || node == root())
+				return ;
+
+			Node*	sib = sibling(node);
+			if (sib && sib->black && (!sib->child[LEFT] || sib->child[RIGHT]->black)) {
+				sib->black = false;
+			}
 			
-			parentsChild(node) = right;
-			right->left = node;
-			right->parent = node->parent;
-			node->parent = right;
 		}
 	
-		// Assumes left node exists
-		void	rotateRight(Node* node) {
-			Node*	left = node->left;
-		
-			node->left = left->right;
-			if (left->right)
-				left->right->parent = node;
+		void	rotate(Node* node, int dir) {
+			Node*	q = node->child[!dir];
+
+			node->child[!dir] = q->child[dir];
+			if (q->child[dir])
+				q->child[dir]->parent = node;
 			
-			parentsChild(node) = left;
-			left->right = node;
-			left->parent = node->parent;
-			node->parent = left;
+			parentsChild(node) = q;
+			q->child[dir] = node;
+			q->parent = node->parent;
+			node->parent = q;
 		}
-	
-		Node*	sentinel() const { return _sentinel; }
-		Node*	root() const { return sentinel()->left; }
+
+		Node*&	sentinel() { return _sentinel; }
+		Node*&	root() { return sentinel()->child[LEFT]; }
+		Node*&	root() const { return sentinel()->child[LEFT]; }
 
 		Node*	newNode(const T& value, Node* parent) {
 			Node*	tmp = _alloc.allocate(1);
@@ -412,22 +396,24 @@ class rbtree {
 		void	destroySubtree(Node *node) {
 			if (!node)
 				return ;
-			destroySubtree(node->left);
-			destroySubtree(node->right);
+			destroySubtree(node->child[LEFT]);
+			destroySubtree(node->child[RIGHT]);
 			deleteNode(node);
 		}
 
-		Node*&		leftOrRightChild(Node* node) const { return node->left ? node->left : node->right; }
-		size_type	amountOfChildren(Node *node) const { return (node->left ? 1 : 0) + (node->right ? 1 : 0); }
-		Node*&		parentsChild(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
+		size_type	nbChildren(Node *node) const { return (node->child[LEFT] ? 1 : 0) + (node->child[RIGHT] ? 1 : 0); }
+		Node*&		leftOrRightChild(Node* node) const { return node->child[LEFT] ? node->child[LEFT] : node->child[RIGHT]; }
+		Node*&		parentsChild(Node* node) const { return node->parent->child[LEFT] == node ? node->parent->child[LEFT] : node->parent->child[RIGHT]; }
 		Node*		grandParent(Node* node) const { return node->parent->parent; }
-		Node*		uncle(Node* node) const { return grandParent(node)->left == node->parent ? grandParent(node)->right : grandParent(node)->left; }
-		bool		leftAligned(Node* node) const {	return node->parent->left == node && grandParent(node)->left == node->parent; }
-		bool		rightAligned(Node* node) const { return node->parent->right == node && grandParent(node)->right == node->parent; }
+		Node*		sibling(Node* node) const { return node->parent->child[LEFT] == node ? node->parent->child[RIGHT] : node->parent->child[LEFT]; }
+		Node*		uncle(Node* node) const { return grandParent(node)->child[LEFT] == node->parent ? grandParent(node)->child[RIGHT] : grandParent(node)->child[LEFT]; }
+		bool		aligned(Node* node, int dir) const { return node->parent->child[dir] == node && grandParent(node)->child[dir] == node->parent;}
+		int			alignment(Node* node) const { return aligned(node, LEFT) ? LEFT : aligned(node, RIGHT) ? RIGHT : -1; }
 
 		NodeAllocator	_alloc;
 		Comp			_comp;
 		Node*			_sentinel;
+		size_type		_size;
 };
 
 } // namespace ft
