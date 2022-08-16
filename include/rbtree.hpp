@@ -1,10 +1,7 @@
 #ifndef RBTREE_HPP
 #define RBTREE_HPP
 
-	// https://www.programiz.com/dsa/insertion-in-a-red-black-tree
-	// https://adtinfo.org/libavl.html/RB-Balancing-Rule.html
 	// https://www.cs.usfca.edu/~galles/visualization/RedBlack.html
-	// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 
 #include <functional> // std::less
 #include <memory> // std::allocator
@@ -13,7 +10,6 @@
 #include "pair.hpp"
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
-#include <initializer_list>
 
 namespace ft
 {
@@ -25,24 +21,25 @@ template <typename T>
 struct Node {
 	T		value;
 	Node*	parent;
-	Node*	child[2];
+	Node*	left;
+	Node*	right;
 	bool	black;
 
-	Node(const T& value): value(value), black(false) { child[LEFT] = NULL; child[RIGHT] = NULL; }
+	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {}
+
+	Node*&	operator[](int dir) { return dir ? right : left; }
 
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
-		os << &node;
 		os << " { " << node.value;
-		os << ", " << node.child[LEFT];
-		os << ", " << node.parent;
-		os << ", " << node.child[RIGHT];
+		os << ", parent: " << node.parent->value;
+		os << ", left: "; node.left ? os << node.left->value : os << "-";
+		os << ", right: "; node.right ? os << node.right->value : os << "-";
 		os << ", " << (node.black ? "black" : "red");
 		os << " }";
 		return os;
 	}
 };
-
 
 template <typename T>
 struct rbtreeIterator {
@@ -65,14 +62,14 @@ struct rbtreeIterator {
 		rbtreeIterator&	iterate(int dir) {
 			Node*	q = _p;
 		
-			if (_p->child[dir]) {
-				_p = _p->child[dir];
-				while (_p->child[!dir])
-					_p = _p->child[!dir];
+			if ((*_p)[dir]) {
+				_p = (*_p)[dir];
+				while ((*_p)[!dir])
+					_p = (*_p)[!dir];
 			}
 			else {
 				_p = _p->parent;
-				while (q == _p->child[dir]) {
+				while (q == (*_p)[dir]) {
 					q = _p;
 					_p = _p->parent;
 				}
@@ -88,6 +85,7 @@ struct rbtreeIterator {
 		bool	operator==(const rbtreeIterator& rhs) { return _p == rhs._p; }
 		bool	operator!=(const rbtreeIterator& rhs) { return _p != rhs._p; }
 
+		// Implicit conversion
 		operator Node*() const { return _p; }
 
 	private:
@@ -98,7 +96,7 @@ template <typename T, typename Comp = std::less<T>, typename Allocator = std::al
 class rbtree {
 	protected:
 
-		typedef Node<T>	Node;
+		typedef Node<T>												Node;
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:
@@ -125,7 +123,7 @@ class rbtree {
 			_alloc = rhs.get_allocator();
 			_comp = rhs.value_comp();
 			_sentinel = newNode(T(), NULL);
-			_size = rhs.size();
+			_size = 0;
 			insert(rhs.begin(), rhs.end());
 			return *this;
 		}
@@ -155,8 +153,8 @@ class rbtree {
 		iterator	begin() {
 			Node*	p = sentinel();
 
-			while (p->child[LEFT])
-				p = p->child[LEFT];
+			while (p->left)
+				p = p->left;
 			return p;
 		}
 
@@ -174,7 +172,7 @@ class rbtree {
 
 		void	clear() {
 			destroySubtree(root());
-			sentinel()->child[LEFT] = NULL;
+			root() = NULL;
 			_size = 0;
 		}
 
@@ -192,9 +190,9 @@ class rbtree {
 			while (p) {
 				q = p;
 				if (_comp(value, p->value))
-					p = p->child[LEFT];
+					p = p->left;
 				else if (_comp(p->value, value))
-					p = p->child[RIGHT];
+					p = p->right;
 				else
 					return make_pair<iterator, bool>(p, false);
 			}
@@ -202,7 +200,7 @@ class rbtree {
 			if (q == sentinel())
 				root() = tmp;
 			else
-				q->child[!_comp(value, q->value)] = tmp;
+				(*q)[!_comp(value, q->value)] = tmp;
 			_size++;
 			rebalanceInsertion(tmp);
 			return make_pair<iterator, bool>(tmp, true);
@@ -215,26 +213,26 @@ class rbtree {
 		}
 
 		void	erase(iterator pos) {
-			Node*	node = pos;
+			Node*	p = pos;
+			Node*	q = p->right;
 
-			switch (nbChildren(node)) {
+			switch (nbChildren(p)) {
 			case 0:
-				parentsChild(node) = NULL;
+				rebalanceDeletion(p);
+				parentsChild(p) = NULL;
 				break;
 			case 1:
-				leftOrRightChild(node)->parent = node->parent;
-				parentsChild(node) = leftOrRightChild(node);
+				rebalanceDeletion(p);
+				leftOrRightChild(p)->parent = p->parent;
+				parentsChild(p) = leftOrRightChild(p);
 				break;
 			case 2:
-				Node*	successor = node->child[RIGHT];
-
-				while (successor->child[LEFT])
-					successor = successor->child[LEFT];
-				std::swap(node->value, successor->value); // TODO
-				return erase(successor);
+				while (q->left)
+					q = q->left;
+				std::swap(p->value, q->value); // TODO: keep iterator valid
+				return erase(q);
 			}
-			rebalanceDeletion(node);
-			deleteNode(node);
+			deleteNode(p);
 			_size--;
 		}
 	
@@ -259,6 +257,7 @@ class rbtree {
 
 		// Lookup
 
+		// Map and set store unique keys, so at most 1 element
 		size_type	count(const T& value) const {
 			return find(value) != end();
 		}
@@ -268,9 +267,9 @@ class rbtree {
 	
 			while (p) {
 				if (_comp(value, p->value))
-					p = p->child[LEFT];
+					p = p->left;
 				else if (_comp(p->value, value))
-					p = p->child[RIGHT];
+					p = p->right;
 				else
 					return p;
 			}
@@ -281,22 +280,12 @@ class rbtree {
 			return make_pair(lower_bound(value), upper_bound(value));
 		}
 
-		// first element >= value
 		iterator	lower_bound(const T& value) {
-			iterator it = begin();
-
-			while (_comp(*it, value))
-				it++;
-			return it;
+			return std::lower_bound(begin(), end(), value, _comp);
 		}
 	
-		// first element > value
 		iterator	upper_bound(const T& value) {
-			iterator it = lower_bound(value);
-
-			if (!_comp(value, *it))
-				it++;
-			return it;
+			return std::upper_bound(begin(), end(), value, _comp);
 		}
 	
 		// Observers
@@ -306,7 +295,7 @@ class rbtree {
 		// TODO: remove
 		void	print() { 
 			printTree(root()); 
-			std::cout << "--------------------------" << "\n";
+			std::cout << "--------------------------------------------------------------------------------" << "\n";
 		}
 	
 #define RED "\033[0;31m"
@@ -316,69 +305,114 @@ class rbtree {
 			if (!node)
 				return ;
 			spaces += 8;
-			printTree(node->child[RIGHT], spaces);
+			printTree(node->right, spaces);
 			std::cout << "\n";
 			for (int i = 8; i < spaces; i++)
         		std::cout << " ";
 			std::cout << std::setw(2) << (node->black ? "" : RED) << node->value << DEFAULT << "\n";
-			printTree(node->child[LEFT], spaces);
+			printTree(node->left, spaces);
 		}
-	
+
 	protected:
-	
-		void	rebalanceInsertion(Node *node) {
+
+		// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html
+
+		void	rebalanceInsertion(Node *p) {
 			root()->black = true;
-			if (node->parent->black || node == root())
+			if (p->parent->black || p == root())
 				return ;
-			
-			Node* 	u = uncle(node);
+
+			// 1: uncle is red
+			// Push grandparents blackness down
+			Node* 	u = uncle(p);
 			if (u && !u->black) {
-				node->parent->black = true;
-				grandParent(node)->black = false;
 				u->black = true;
-				rebalanceInsertion(grandParent(node));
+				p->parent->black = true;
+				grandParent(p)->black = false;
+				rebalanceInsertion(grandParent(p));
 				return ;
 			}
 
-			int	a = alignment(node);
+			// 2: red nodes are aligned
+			// Rotate grandparent
+			int	a = alignment(p);
 			if (a == LEFT || a == RIGHT) {
-				rotate(grandParent(node), !a);
-				node->parent->child[!a]->black = false;
-				node->parent->black = true;
+				rotate(grandParent(p), !a);
+				(*p->parent)[!a]->black = false;
+				p->parent->black = true;
 			}
-			else {
-				node->parent->child[LEFT] == node ? rotate(node->parent, RIGHT) : rotate(node->parent, LEFT);
-				rebalanceInsertion(leftOrRightChild(node));
+		
+			// 3: red nodes are unaligned
+			// Align and recurse
+			else {				
+				rotate(p->parent, !parentsSide(p));
+				rebalanceInsertion(leftOrRightChild(p));
 			}
 		}
 
-		void	rebalanceDeletion(Node* node) {
-			if ((!node->black && !nbChildren(node)) || node == root())
+		// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+
+		void	rebalanceDeletion(Node* p) {
+			if (!p->black || p == root())
 				return ;
 
-			Node*	sib = sibling(node);
-			if (sib && sib->black && (!sib->child[LEFT] || sib->child[RIGHT]->black)) {
-				sib->black = false;
-			}
+			Node*	sib = sibling(p);
 			
+			// 4: sibling is red
+			// Swap siblings and parents color. Rotate parent towards p and recurse
+			if (!sib->black) {
+				p->parent->black = false;
+				sib->black = true;
+				rotate(p->parent, sib->parent->left == sib ? RIGHT : LEFT);
+				rebalanceDeletion(p);
+				return ;
+			}
+
+			// 3: sibling is black and has no red children
+			// Push blackness up and recurse
+			if (isBlack(sib->left) && isBlack(sib->right)) {
+				sib->black = false;
+				if (p->parent->black)
+					rebalanceDeletion(p->parent);
+				else
+					p->parent->black = true;
+				return ;
+			}
+
+			// 5: siblings near child is red and far child is black
+			// Swap siblings and red childs color. Rotate sibling towards p and recurse
+			int	siblingSide = parentsSide(sib);
+			if (isBlack((*sib)[siblingSide]) && !(*sib)[!siblingSide]->black) {
+				sib->black = false;
+				(*sib)[!siblingSide]->black = true;
+				rotate(sib, siblingSide);
+				rebalanceDeletion(p);
+				return ;
+			}
+
+			// 6: sibling's far child is red
+			// Swap sibling and parents color. Rotate parent towards p. Color red child black
+			std::swap(p->parent->black, sib->black);
+			rotate(p->parent, !siblingSide);
+			(*sib)[siblingSide]->black = true;
 		}
 	
-		void	rotate(Node* node, int dir) {
-			Node*	q = node->child[!dir];
+		void	rotate(Node* p, int dir) {
+			Node*	q = (*p)[!dir];
 
-			node->child[!dir] = q->child[dir];
-			if (q->child[dir])
-				q->child[dir]->parent = node;
+			(*p)[!dir] =(*q)[dir];
+			if ((*q)[dir])
+				(*q)[dir]->parent = p;
 			
-			parentsChild(node) = q;
-			q->child[dir] = node;
-			q->parent = node->parent;
-			node->parent = q;
+			parentsChild(p) = q;
+			(*q)[dir] = p;
+			q->parent = p->parent;
+			p->parent = q;
 		}
 
 		Node*&	sentinel() { return _sentinel; }
-		Node*&	root() { return sentinel()->child[LEFT]; }
-		Node*&	root() const { return sentinel()->child[LEFT]; }
+		Node*&	root() { return sentinel()->left; }
+		Node*&	root() const { return sentinel()->left; }
 
 		Node*	newNode(const T& value, Node* parent) {
 			Node*	tmp = _alloc.allocate(1);
@@ -396,19 +430,22 @@ class rbtree {
 		void	destroySubtree(Node *node) {
 			if (!node)
 				return ;
-			destroySubtree(node->child[LEFT]);
-			destroySubtree(node->child[RIGHT]);
+			destroySubtree(node->left);
+			destroySubtree(node->right);
 			deleteNode(node);
 		}
 
-		size_type	nbChildren(Node *node) const { return (node->child[LEFT] ? 1 : 0) + (node->child[RIGHT] ? 1 : 0); }
-		Node*&		leftOrRightChild(Node* node) const { return node->child[LEFT] ? node->child[LEFT] : node->child[RIGHT]; }
-		Node*&		parentsChild(Node* node) const { return node->parent->child[LEFT] == node ? node->parent->child[LEFT] : node->parent->child[RIGHT]; }
-		Node*		grandParent(Node* node) const { return node->parent->parent; }
-		Node*		sibling(Node* node) const { return node->parent->child[LEFT] == node ? node->parent->child[RIGHT] : node->parent->child[LEFT]; }
-		Node*		uncle(Node* node) const { return grandParent(node)->child[LEFT] == node->parent ? grandParent(node)->child[RIGHT] : grandParent(node)->child[LEFT]; }
-		bool		aligned(Node* node, int dir) const { return node->parent->child[dir] == node && grandParent(node)->child[dir] == node->parent;}
-		int			alignment(Node* node) const { return aligned(node, LEFT) ? LEFT : aligned(node, RIGHT) ? RIGHT : -1; }
+		Node*	uncle(Node* node) const { return grandParent(node)->left == node->parent ? grandParent(node)->right : grandParent(node)->left; }
+		Node*	sibling(Node* node) const { return node->parent->left == node ? node->parent->right : node->parent->left; }
+		Node*	grandParent(Node* node) const { return node->parent->parent; }
+		Node*&	parentsChild(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
+		Node*&	leftOrRightChild(Node* node) const { return node->left ? node->left : node->right; }
+		
+		bool	isBlack(Node* node) const { return !node || node->black; }
+		int		alignment(Node* node) const { return aligned(node, LEFT) ? LEFT : aligned(node, RIGHT) ? RIGHT : -1; }
+		int		nbChildren(Node *node) const { return !!node->left + !!node->right; }
+		int		parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
+		bool	aligned(Node* node, int dir) const { return (*node->parent)[dir] == node && (*grandParent(node))[dir] == node->parent;}
 
 		NodeAllocator	_alloc;
 		Comp			_comp;

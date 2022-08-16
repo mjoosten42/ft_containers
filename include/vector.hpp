@@ -288,21 +288,9 @@ class vector {
 		size_type	_size;
 		pointer		_data;
 
-	friend std::ostream&	operator<<(std::ostream& os, const vector<T>& v) { // TODO: remove
-		std::cout << "size: " << std::setw(2) << v.size();
-		std::cout << " { ";
-		for (size_t i = 0; i < v.size(); i++) {
-			if (i)
-				std::cout << ", ";
-			std::cout << v[i];
-		}
-		std::cout << " }";
-		return os;
-	}
-
 }; // class vector
 
-// swap
+// std::swap specialization
 template <typename T, class Allocator>
 void	swap(vector<T, Allocator>& lhs, vector<T, Allocator>& rhs) { lhs.swap(rhs); }
 
