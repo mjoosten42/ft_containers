@@ -290,10 +290,11 @@ class vector {
 
 }; // class vector
 
-// std::swap specialization
-template <typename T, class Allocator>
-void	swap(vector<T, Allocator>& lhs, vector<T, Allocator>& rhs) { lhs.swap(rhs); }
-
 } // namespace ft
+
+namespace std {
+	template <typename T, typename Allocator>
+	void	swap(ft::vector<T, Allocator>& lhs, ft::vector<T, Allocator>& rhs) { lhs.swap(rhs); }
+}
 
 #endif // VECTOR_HPP

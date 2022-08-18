@@ -40,4 +40,9 @@ class stack {
 
 } // namespace ft
 
+namespace std {
+	template <typename T, typename Container>
+	void	swap(ft::stack<T, Container>& lhs, ft::stack<T, Container>& rhs) { lhs.swap(rhs); }
+}
+
 #endif // STACK_HPP

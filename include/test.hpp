@@ -7,6 +7,7 @@
 #define COLOR_RED "\033[0;31m"
 #define COLOR_BLUE "\033[0;36m"
 #define COLOR_GREEN "\033[0;32m"
+#define COLOR_YELLOW "\033[0;33m"
 #define COLOR_DEFAULT "\033[0m"
 
 template <typename T>
@@ -40,15 +41,23 @@ struct A {
 			*_p = *a._p;
 			return *this;
 		}
-		int p() const { return *_p; }
 		operator	int() const { return *_p; }
-		bool	operator<(const A& rhs) { return p() < rhs.p(); }
+		bool	operator<(const A& rhs) { return _p < rhs._p; }
 	
-	private:
+	public:
 		int*	_p;
 		int		_index;
 };
 
+namespace std {
+	template <>
+	void	swap(A& lhs, A& rhs) {
+			#ifdef PRINT
+				std::cout << COLOR_YELLOW << "swap\n" << DEFAULT;
+			#endif
+		std::swap(lhs._p, rhs._p);
+	}
+}
 
 int A::count = 0;
 
