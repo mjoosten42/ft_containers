@@ -8,14 +8,18 @@
 #include <iterator> // bidirectional_iterator_tag
 #include "iterator.hpp" // reverseIterator
 #include "pair.hpp"
+
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
+#include <cmath>  // TODO: remove
 
 namespace ft
 {
 
 #define LEFT 0
 #define RIGHT 1
+
+#define UNALIGNED 2
 
 template <typename T>
 struct Node {
@@ -31,8 +35,8 @@ struct Node {
 
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
-		os << " { " << node.value;
-		os << ", parent: " << node.parent->value;
+		os << "{ " << node.value;
+		os << ", parent: "; node.parent ? os << node.parent->value : os << "-";
 		os << ", left: "; node.left ? os << node.left->value : os << "-";
 		os << ", right: "; node.right ? os << node.right->value : os << "-";
 		os << ", " << (node.black ? "black" : "red");
@@ -92,7 +96,7 @@ struct rbtreeIterator {
 		Node*	_p;
 };
 
-template <typename T, typename Comp = std::less<T>, typename Allocator = std::allocator<T> >
+template <typename T, typename Compare = std::less<T>, typename Allocator = std::allocator<T> >
 class rbtree {
 	protected:
 
@@ -103,17 +107,33 @@ class rbtree {
 
 		// Typedefs
 
-		typedef std::size_t						size_type;
-		typedef rbtreeIterator<T>				iterator;
-		typedef rbtreeIterator<const T>			const_iterator;
-		typedef reverseIterator<iterator>		reverse_iterator;
-		typedef reverseIterator<const_iterator>	const_reverse_iterator;
+		typedef std::size_t							size_type;
+		typedef std::ptrdiff_t						difference_type;
+		typedef Compare								key_compare;
+		typedef Allocator							allocator_type;
+		typedef T&									reference;
+		typedef const T&							const_reference;
+		typedef typename Allocator::pointer			pointer;
+		typedef typename Allocator::const_pointer	const_pointer;
+		typedef rbtreeIterator<T>					iterator;
+		typedef rbtreeIterator<const T>				const_iterator;
+		typedef reverseIterator<iterator>			reverse_iterator;
+		typedef reverseIterator<const_iterator>		const_reverse_iterator;
 		
 		rbtree(): _alloc(), _comp(), _sentinel(newNode(T(), NULL)), _size(0) {}
 		rbtree(const rbtree& rhs): _sentinel(NULL) { *this = rhs; }
 
+		explicit	rbtree(const Compare& comp, const Allocator& alloc = Allocator())
+			: _alloc(alloc), _comp(comp), _sentinel(newNode(T(), NULL)), _size(0) {}
+
+		template <class InputIt>
+		explicit	rbtree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
+			: _alloc(alloc), _comp(comp), _sentinel(newNode(T(), NULL)), _size(0) {
+				insert(first, last);
+			}
+
 		~rbtree() {
-			clear();
+			destroySubtree(root());
 			deleteNode(sentinel());
 		};
 
@@ -121,10 +141,10 @@ class rbtree {
 			if (sentinel())
 				destroySubtree(sentinel());
 			_alloc = rhs.get_allocator();
-			_comp = rhs.value_comp();
+			_comp = rhs.key_comp();
 			_sentinel = newNode(T(), NULL);
 			_size = 0;
-			insert(rhs.begin(), rhs.end());
+			insert((const_cast<rbtree&>(rhs)).begin(), (const_cast<rbtree&>(rhs)).end()); // TODO
 			return *this;
 		}
 
@@ -161,7 +181,7 @@ class rbtree {
 		iterator			end() { return sentinel(); }
 		reverse_iterator	rbegin() { return end(); }
 		reverse_iterator	rend() { return begin(); }
-	
+
 		// Capacity
 
 		bool		empty() const { return size() == 0; }
@@ -176,19 +196,19 @@ class rbtree {
 			_size = 0;
 		}
 
-		void	swap(rbtree& successor) {
-			std::swap(_alloc);
-			std::swap(_comp);
-			std::swap(sentinel(), successor.sentinel());
+		void	swap(rbtree& other) {
+			std::swap(_alloc, other._alloc);
+			std::swap(_comp, other._comp);
+			std::swap(sentinel(), other.sentinel());
 		}
 
 		pair<iterator, bool>	insert(const T& value) {
 			Node*	tmp;
 			Node*	p = root();
-			Node*	q = sentinel();
+			Node*	parent = sentinel();
 
 			while (p) {
-				q = p;
+				parent = p;
 				if (_comp(value, p->value))
 					p = p->left;
 				else if (_comp(p->value, value))
@@ -196,14 +216,20 @@ class rbtree {
 				else
 					return make_pair<iterator, bool>(p, false);
 			}
-			tmp = newNode(value, q);
-			if (q == sentinel())
+			tmp = newNode(value, parent);
+			if (parent == sentinel())
 				root() = tmp;
 			else
-				(*q)[!_comp(value, q->value)] = tmp;
+				(*parent)[!_comp(value, parent->value)] = tmp;
+			rebalanceInsertion(parent);
 			_size++;
-			rebalanceInsertion(tmp);
 			return make_pair<iterator, bool>(tmp, true);
+		}
+
+		// TODO: use hint
+		iterator	insert(iterator hint, const T& value) {
+			return insert(value).first;
+			(void)hint;
 		}
 	
 		template <typename InputIt>
@@ -214,21 +240,20 @@ class rbtree {
 
 		void	erase(iterator pos) {
 			Node*	p = pos;
-			Node*	q = p->right;
+			Node*	q;
 
 			switch (nbChildren(p)) {
 			case 0:
 				rebalanceDeletion(p);
-				parentsChild(p) = NULL;
+				parentMyRef(p) = NULL;
 				break;
 			case 1:
 				rebalanceDeletion(p);
-				leftOrRightChild(p)->parent = p->parent;
-				parentsChild(p) = leftOrRightChild(p);
+				myChildRef(p)->parent = p->parent;
+				parentMyRef(p) = myChildRef(p);
 				break;
 			case 2:
-				while (q->left)
-					q = q->left;
+				q = ++iterator(p);
 				std::swap(p->value, q->value); // TODO: keep iterator valid
 				return erase(q);
 			}
@@ -242,7 +267,11 @@ class rbtree {
 			while (first != last) {
 				first++;
 				it = first;
-				erase(--it);
+				it--;
+				std::cout << "first: " << *(Node*)first << "\n";
+				std::cout << "it: " << *it << "\n";
+				erase(it);
+				print();
 			}
 		}
 	
@@ -276,40 +305,45 @@ class rbtree {
 			return end();
 		}
 		
-		pair<iterator, iterator>	equal_range(const T& value) {
-			return make_pair(lower_bound(value), upper_bound(value));
-		}
+		pair<iterator, iterator>
+					equal_range(const T& value) { return make_pair(lower_bound(value), upper_bound(value)); }
+		iterator	lower_bound(const T& value) { return std::lower_bound(begin(), end(), value, _comp); }
+		iterator	upper_bound(const T& value) { return std::upper_bound(begin(), end(), value, _comp); }
+	
+		pair<const_iterator, const_iterator>
+						equal_range(const T& value) const { return make_pair(lower_bound(value), upper_bound(value)); }
+		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
+		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
-		iterator	lower_bound(const T& value) {
-			return std::lower_bound(begin(), end(), value, _comp);
-		}
-	
-		iterator	upper_bound(const T& value) {
-			return std::upper_bound(begin(), end(), value, _comp);
-		}
-	
 		// Observers
 
-		Comp	value_comp() const { return _comp; }
-	
+		key_compare		key_comp() const { return _comp; }
+
 		// TODO: remove
-		void	print() { 
-			printTree(root()); 
-			std::cout << "--------------------------------------------------------------------------------" << "\n";
-		}
-	
 #define RED "\033[0;31m"
 #define DEFAULT "\033[0m"
+#define SPACES 16
+
+		void	print() {
+			float	len = SPACES;
+		
+			printTree(root());
+
+			if (!empty())
+				len *=  M_SQRT2 * std::log2(size());
+			std::cout << std::string((int)len, '-') << "\n";
+		}
+	
 
 		void	printTree(Node *node, int spaces = 0) const {
 			if (!node)
 				return ;
-			spaces += 8;
+			spaces += SPACES;
 			printTree(node->right, spaces);
 			std::cout << "\n";
-			for (int i = 8; i < spaces; i++)
+			for (int i = SPACES; i < spaces; i++)
         		std::cout << " ";
-			std::cout << std::setw(2) << (node->black ? "" : RED) << node->value << DEFAULT << "\n";
+			std::cout << std::setw(2) << (node->black ? DEFAULT : RED) << node->value << DEFAULT << "\n";
 			printTree(node->left, spaces);
 		}
 
@@ -317,37 +351,37 @@ class rbtree {
 
 		// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html
 
+		// p is parent of newly inserted node
 		void	rebalanceInsertion(Node *p) {
 			root()->black = true;
-			if (p->parent->black || p == root())
+			if (p->black || p == sentinel())
 				return ;
+			
+			// 1: sibling is red
+			// Push grandparents blackness down and recurse for grandparent
+			Node* 	sib = sibling(p);
+			if (sib && !sib->black) {
+				sib->black = true;
+				p->black = true;
+				p->parent->black = false;
+				rebalanceInsertion(p->parent->parent);
+				return ;
+			}
 
-			// 1: uncle is red
-			// Push grandparents blackness down
-			Node* 	u = uncle(p);
-			if (u && !u->black) {
-				u->black = true;
-				p->parent->black = true;
-				grandParent(p)->black = false;
-				rebalanceInsertion(grandParent(p));
-				return ;
+			int	side = parentsSide(p);
+		
+			// 3: red nodes are unaligned
+			// Align by rotating parent
+			if ((*p)[!side] && !(*p)[!side]->black) {
+				rotate(p, side);
+				p = p->parent;
 			}
 
 			// 2: red nodes are aligned
-			// Rotate grandparent
-			int	a = alignment(p);
-			if (a == LEFT || a == RIGHT) {
-				rotate(grandParent(p), !a);
-				(*p->parent)[!a]->black = false;
-				p->parent->black = true;
-			}
-		
-			// 3: red nodes are unaligned
-			// Align and recurse
-			else {				
-				rotate(p->parent, !parentsSide(p));
-				rebalanceInsertion(leftOrRightChild(p));
-			}
+			// Rotate black grandparent and swap colors
+			rotate(p->parent, !side);
+			(*p)[!side]->black = false;
+			p->black = true;
 		}
 
 		// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
@@ -379,9 +413,10 @@ class rbtree {
 				return ;
 			}
 
+			int	siblingSide = parentsSide(sib);
+
 			// 5: siblings near child is red and far child is black
 			// Swap siblings and red childs color. Rotate sibling towards p and recurse
-			int	siblingSide = parentsSide(sib);
 			if (isBlack((*sib)[siblingSide]) && !(*sib)[!siblingSide]->black) {
 				sib->black = false;
 				(*sib)[!siblingSide]->black = true;
@@ -404,7 +439,7 @@ class rbtree {
 			if ((*q)[dir])
 				(*q)[dir]->parent = p;
 			
-			parentsChild(p) = q;
+			parentMyRef(p) = q;
 			(*q)[dir] = p;
 			q->parent = p->parent;
 			p->parent = q;
@@ -412,7 +447,6 @@ class rbtree {
 
 		Node*&	sentinel() { return _sentinel; }
 		Node*&	root() { return sentinel()->left; }
-		Node*&	root() const { return sentinel()->left; }
 
 		Node*	newNode(const T& value, Node* parent) {
 			Node*	tmp = _alloc.allocate(1);
@@ -435,24 +469,25 @@ class rbtree {
 			deleteNode(node);
 		}
 
-		Node*	uncle(Node* node) const { return grandParent(node)->left == node->parent ? grandParent(node)->right : grandParent(node)->left; }
 		Node*	sibling(Node* node) const { return node->parent->left == node ? node->parent->right : node->parent->left; }
-		Node*	grandParent(Node* node) const { return node->parent->parent; }
-		Node*&	parentsChild(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
-		Node*&	leftOrRightChild(Node* node) const { return node->left ? node->left : node->right; }
+		Node*&	myChildRef(Node* node) const { return node->left ? node->left : node->right; }
+		Node*&	parentMyRef(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
 		
 		bool	isBlack(Node* node) const { return !node || node->black; }
-		int		alignment(Node* node) const { return aligned(node, LEFT) ? LEFT : aligned(node, RIGHT) ? RIGHT : -1; }
 		int		nbChildren(Node *node) const { return !!node->left + !!node->right; }
 		int		parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
-		bool	aligned(Node* node, int dir) const { return (*node->parent)[dir] == node && (*grandParent(node))[dir] == node->parent;}
 
 		NodeAllocator	_alloc;
-		Comp			_comp;
+		Compare			_comp;
 		Node*			_sentinel;
 		size_type		_size;
 };
 
 } // namespace ft
+
+namespace std {
+	template <typename T, typename Compare, typename Allocator>
+	void	swap(ft::rbtree<T, Compare, Allocator>& lhs, ft::rbtree<T, Compare, Allocator>& rhs) { lhs.swap(rhs); }
+}
 
 #endif // RBTREE_HPP

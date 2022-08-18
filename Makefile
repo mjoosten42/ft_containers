@@ -40,6 +40,9 @@ fclean: clean
 re: fclean
 	make all
 
+run: all
+	./$(NAME)
+
 std: fclean
 std: CXXFLAGS += -D STD
 std: all
