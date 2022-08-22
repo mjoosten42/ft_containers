@@ -15,7 +15,6 @@ void	print(const T& value) {
 	std::cout << value << "\n";
 }
 
-// #define PRINT
 struct A {
 		static int count;
 	public:
@@ -73,7 +72,7 @@ class myAllocator {
 
 	pointer	allocate(size_type n) { return malloc(n * sizeof(T)); }
 	void	deallocate(pointer p, size_type n) { free(p); (void)n; }
-	void	construct(pointer p, const T& value = T()) { new (p) T(value); }
+	void	construct(pointer p, const T& value) { new (p) T(value); }
 	void	destroy(pointer p) { p->~T(); }
 
 	size_type	max_size() const { return 16; }

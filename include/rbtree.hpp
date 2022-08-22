@@ -120,28 +120,28 @@ class rbtree {
 		typedef reverseIterator<iterator>			reverse_iterator;
 		typedef reverseIterator<const_iterator>		const_reverse_iterator;
 		
-		rbtree(): _alloc(), _comp(), _sentinel(newNode(T(), NULL)), _size(0) {}
+		rbtree(): _alloc(), _comp(), _sentinel(newSentinel()), _size(0) {}
 		rbtree(const rbtree& rhs): _sentinel(NULL) { *this = rhs; }
 
 		explicit	rbtree(const Compare& comp, const Allocator& alloc = Allocator())
-			: _alloc(alloc), _comp(comp), _sentinel(newNode(T(), NULL)), _size(0) {}
+			: _alloc(alloc), _comp(comp), _sentinel(newSentinel()), _size(0) {}
 
 		template <class InputIt>
 		explicit	rbtree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
-			: _alloc(alloc), _comp(comp), _sentinel(newNode(T(), NULL)), _size(0) {
+			: _alloc(alloc), _comp(comp), _sentinel(newSentinel()), _size(0) {
 				insert(first, last);
 			}
 
 		~rbtree() {
 			destroySubtree(root());
-			deleteNode(sentinel());
+			_alloc.deallocate(sentinel(), 1);
 		};
 
 		rbtree&	operator=(const rbtree& rhs) {
 			if (sentinel())
 				destroySubtree(sentinel());
 			_alloc = rhs.get_allocator();
-			_comp = rhs.key_comp();
+			_comp = rhs._comp; // value_comp()?
 			_sentinel = newNode(T(), NULL);
 			_size = 0;
 			insert((const_cast<rbtree&>(rhs)).begin(), (const_cast<rbtree&>(rhs)).end()); // TODO
@@ -444,6 +444,15 @@ class rbtree {
 
 		Node*&	sentinel() { return _sentinel; }
 		Node*&	root() { return sentinel()->left; }
+
+
+		Node*	newSentinel() {
+			Node*	tmp = _alloc.allocate(1);
+
+			tmp->left = NULL;
+			tmp->right = NULL;
+			return tmp;
+		}
 
 		Node*	newNode(const T& value, Node* parent) {
 			Node*	tmp = _alloc.allocate(1);
