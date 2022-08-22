@@ -325,13 +325,13 @@ class rbtree {
 		// p is parent of newly inserted node
 		void	rebalanceInsertion(Node *p) {
 			root()->black = true;
-			if (p->black || p == sentinel())
+			if (p == sentinel() || isBlack(p))
 				return ;
 			
 			// 1: sibling is red
 			// Push parents blackness down and recurse for grandparent
 			Node* 	sib = sibling(p);
-			if (sib && !sib->black) {
+			if (sib && isRed(sib)) {
 				sib->black = true;
 				p->black = true;
 				p->parent->black = false;
@@ -343,7 +343,7 @@ class rbtree {
 		
 			// 3: red nodes are unaligned
 			// Align by rotating this
-			if ((*p)[!side] && !(*p)[!side]->black) {
+			if ((*p)[!side] && isRed((*p)[!side])) {
 				rotate(p, side);
 				p = p->parent;
 			}
@@ -365,7 +365,7 @@ class rbtree {
 			
 			// 4: sibling is red
 			// Swap siblings and parents color. Rotate parent towards p and recurse
-			if (!sib->black) {
+			if (isRed(sib)) {
 				p->parent->black = false;
 				sib->black = true;
 				rotate(p->parent, !parentsSide(sib));
@@ -388,7 +388,7 @@ class rbtree {
 
 			// 5: siblings near child is red and far child is black
 			// Swap siblings and red childs color. Rotate sibling towards p and recurse
-			if (isBlack((*sib)[siblingSide]) && !(*sib)[!siblingSide]->black) {
+			if (isBlack((*sib)[siblingSide]) && isRed((*sib)[!siblingSide])) {
 				sib->black = false;
 				(*sib)[!siblingSide]->black = true;
 				rotate(sib, siblingSide);
@@ -510,6 +510,7 @@ class rbtree {
 		Node*&	parentMyRef(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
 		
 		bool	isBlack(Node* node) const { return !node || node->black; }
+		bool	isRed(Node* node) const { return node && !node->black; }
 		int		nbChildren(Node *node) const { return !!node->left + !!node->right; }
 		int		parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
 

@@ -7,7 +7,6 @@ void	randomTree(ft::rbtree<A>& rbtree, int insert = 32, int erase = 64) {
 	srand(time(NULL));
 	for (int i = 0; i < insert; i++)
 		rbtree.insert(10 + rand() % 90);
-	rbtree.print();
 	for (int i = 0; i < erase; i++)
 		rbtree.erase(10 + rand() % 90);
 }
@@ -25,6 +24,6 @@ int	main() {
 
 	std::cout << std::boolalpha;
 
-	wikiTree(rbtree);
+	randomTree(rbtree);
 	rbtree.print();
 }
