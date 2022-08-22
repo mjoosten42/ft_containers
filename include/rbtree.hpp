@@ -162,9 +162,9 @@ class rbtree {
 	
 		T&	operator[](const T& value) {
 			iterator it = find(value);
-		
+
 			if (it == end())
-				return *insert(value).first;
+				return *insert(T()).first;
 			return *it;
 		}
 
@@ -203,33 +203,13 @@ class rbtree {
 		}
 
 		pair<iterator, bool>	insert(const T& value) {
-			Node*	tmp;
-			Node*	p = root();
-			Node*	parent = sentinel();
-
-			while (p) {
-				parent = p;
-				if (_comp(value, p->value))
-					p = p->left;
-				else if (_comp(p->value, value))
-					p = p->right;
-				else
-					return make_pair<iterator, bool>(p, false);
-			}
-			tmp = newNode(value, parent);
-			if (parent == sentinel())
-				root() = tmp;
-			else
-				(*parent)[!_comp(value, parent->value)] = tmp;
-			rebalanceInsertion(parent);
-			_size++;
-			return make_pair<iterator, bool>(tmp, true);
+			if (empty())
+				return make_pair(insertHere(sentinel(), LEFT, value), true);
+			return insertAt(root(), value);
 		}
 
-		// TODO: use hint
 		iterator	insert(iterator hint, const T& value) {
-			return insert(value).first;
-			(void)hint;
+			return insertAt(hint, value).first;
 		}
 	
 		template <typename InputIt>
@@ -254,8 +234,8 @@ class rbtree {
 				break;
 			case 2:
 				q = ++iterator(p);
-				std::swap(p->value, q->value); // TODO: keep iterator valid
-				return erase(q);
+				swapNode(p, q);
+				return erase(p);
 			}
 			deleteNode(p);
 			_size--;
@@ -267,11 +247,7 @@ class rbtree {
 			while (first != last) {
 				first++;
 				it = first;
-				it--;
-				std::cout << "first: " << *(Node*)first << "\n";
-				std::cout << "it: " << *it << "\n";
-				erase(it);
-				print();
+				erase(--it);
 			}
 		}
 	
@@ -293,7 +269,7 @@ class rbtree {
 	
 		iterator	find(const T& value) {
 			Node*	p = root();
-	
+		
 			while (p) {
 				if (_comp(value, p->value))
 					p = p->left;
@@ -315,25 +291,20 @@ class rbtree {
 		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
 		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
-		// Observers
-
-		key_compare		key_comp() const { return _comp; }
-
 		// TODO: remove
 #define RED "\033[0;31m"
 #define DEFAULT "\033[0m"
-#define SPACES 16
+#define SPACES 12
 
 		void	print() {
-			float	len = SPACES;
-		
-			printTree(root());
+			int len = SPACES * M_SQRT2 * std::log2(size() + 1);
 
-			if (!empty())
-				len *=  M_SQRT2 * std::log2(size());
-			std::cout << std::string((int)len, '-') << "\n";
+			printTree(root());
+			if (len)
+				std::cout << std::string((int)len, '-') << "\n";
+			else
+				std::cout << "--- empty ---\n";
 		}
-	
 
 		void	printTree(Node *node, int spaces = 0) const {
 			if (!node)
@@ -358,7 +329,7 @@ class rbtree {
 				return ;
 			
 			// 1: sibling is red
-			// Push grandparents blackness down and recurse for grandparent
+			// Push parents blackness down and recurse for grandparent
 			Node* 	sib = sibling(p);
 			if (sib && !sib->black) {
 				sib->black = true;
@@ -371,14 +342,14 @@ class rbtree {
 			int	side = parentsSide(p);
 		
 			// 3: red nodes are unaligned
-			// Align by rotating parent
+			// Align by rotating this
 			if ((*p)[!side] && !(*p)[!side]->black) {
 				rotate(p, side);
 				p = p->parent;
 			}
 
 			// 2: red nodes are aligned
-			// Rotate black grandparent and swap colors
+			// Rotate black parent and swap colors
 			rotate(p->parent, !side);
 			(*p)[!side]->black = false;
 			p->black = true;
@@ -397,7 +368,7 @@ class rbtree {
 			if (!sib->black) {
 				p->parent->black = false;
 				sib->black = true;
-				rotate(p->parent, sib->parent->left == sib ? RIGHT : LEFT);
+				rotate(p->parent, !parentsSide(sib));
 				rebalanceDeletion(p);
 				return ;
 			}
@@ -432,6 +403,32 @@ class rbtree {
 			(*sib)[siblingSide]->black = true;
 		}
 	
+		pair<iterator, bool>	insertAt(Node* p, const T& value) {
+			// Check if we are the correct subtree
+			if (p != root())
+				if (_comp(p->parent->value, value) != parentsSide(p))
+					return insertAt(p->parent, value);
+
+			if (_comp(value, p->value)) {
+				if (p->left)
+					return insertAt(p->left, value);
+				return make_pair(insertHere(p, LEFT, value), true);
+			}
+			if (_comp(p->value, value)) {
+				if (p->right)
+					return insertAt(p->right, value);
+				return make_pair(insertHere(p, RIGHT, value), true);
+			}
+			return make_pair(iterator(p), false);
+		}
+
+		iterator	insertHere(Node* parent, int dir, const T& value) {
+			(*parent)[dir] = newNode(value, parent);
+			rebalanceInsertion(parent);
+			_size++;
+			return (*parent)[dir];
+		}
+	
 		void	rotate(Node* p, int dir) {
 			Node*	q = (*p)[!dir];
 
@@ -461,6 +458,36 @@ class rbtree {
 			_alloc.deallocate(node, 1);
 		}
 	
+		// Necessary to keep iterators valid
+		void	swapNode(Node* lhs, Node* rhs) {
+			Node*	parent = lhs->parent;
+			Node*	left = lhs->left;
+			Node*	right = rhs->right;
+
+			std::swap(lhs->black, rhs->black);
+			parentMyRef(lhs) = rhs;
+			if (lhs->left)
+				lhs->left->parent = rhs;
+			if (rhs->right)
+				rhs->right->parent = lhs;
+
+			if (lhs->right == rhs) {
+				lhs->left = NULL;
+				lhs->right = right;
+				lhs->parent = rhs;
+				rhs->left = left;
+				rhs->right = lhs;
+				rhs->parent = parent;
+			}
+			else {
+				lhs->right->parent = rhs;
+				parentMyRef(rhs) = lhs;
+				std::swap(lhs->left, rhs->left);
+				std::swap(lhs->right, rhs->right);
+				std::swap(lhs->parent, rhs->parent);
+			}
+		}
+
 		void	destroySubtree(Node *node) {
 			if (!node)
 				return ;

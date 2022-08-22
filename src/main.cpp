@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 
-void	randomTree(ft::rbtree<A>& rbtree, int insert, int erase) {
+void	randomTree(ft::rbtree<A>& rbtree, int insert = 32, int erase = 64) {
 	srand(time(NULL));
 	for (int i = 0; i < insert; i++)
 		rbtree.insert(10 + rand() % 90);
@@ -17,7 +17,7 @@ void	wikiTree(ft::rbtree<A>& rbtree) {
 	int		size = sizeof(array) / sizeof(array[0]);
 
 	for (int i = 0; i < size; i++)
-		rbtree[array[i]];
+		rbtree.insert(array[i]);
 }
 
 int	main() {
@@ -25,13 +25,6 @@ int	main() {
 
 	std::cout << std::boolalpha;
 
-	randomTree(rbtree, 32, 64);
+	wikiTree(rbtree);
 	rbtree.print();
-
-	// ft::rbtree<A>::iterator it = rbtree.begin();
-	// ft::rbtree<A>::iterator ite = rbtree.end();
-
-	// it++;
-	// rbtree.erase(it, ite);
-	// rbtree.print();
 }
