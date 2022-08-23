@@ -13,7 +13,7 @@ LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
 INC = -I include
 
 SRCDIR = src
-SRC = main.cpp
+SRC = vectorTest.cpp
 
 OBJDIR = obj
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))

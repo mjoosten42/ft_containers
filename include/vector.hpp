@@ -10,75 +10,24 @@ namespace ft
 {
 
 template <typename T, class Allocator = std::allocator<T> >
-class vector;
-
-template <typename T>
-class vectorIterator {
-
-		typedef std::size_t	size_type;
-		typedef vector<T>	vector;
-
-	public:
-		typedef std::random_access_iterator_tag	iterator_category;
-		typedef T								value_type;
-		typedef std::ptrdiff_t					difference_type;
-		typedef T*								pointer;
-		typedef T&								reference;
-	
-		vectorIterator(T** p): _data(p), _index(0) {}
-		vectorIterator(const vectorIterator& other) { *this = other; }
-	
-		vectorIterator&	operator=(const vectorIterator& other) { _data = other._data; _index = other._index; return *this; }
-
-		T&	operator*() const { return (*_data)[_index]; }
-		T*	operator->() const { return *_data + _index; }
-		T*	operator[](size_type n) const { return (*_data)[_index + n]; }
-
-		vectorIterator&	operator++() { _index++; return *this; }
-		vectorIterator&	operator--() { _index--; return *this; }
-	
-		vectorIterator	operator++(int) { vectorIterator tmp(*this); ++(*this); return tmp; }
-		vectorIterator	operator--(int) { vectorIterator tmp(*this); --(*this); return tmp; }
-	
-				vectorIterator	operator+(size_type n) { vectorIterator tmp(*this); tmp._index += n; return tmp; }
-		friend	vectorIterator	operator+(size_type n, const vectorIterator& rhs) { return rhs + n; }
-	
-		vectorIterator	operator-(size_type n) { vectorIterator tmp(*this); tmp._index -= n; return tmp; }
-		difference_type	operator-(const vectorIterator& rhs) { return _index - rhs._index; }
-		
-		bool	operator==(const vectorIterator& rhs) { return _data == rhs._data && _index == rhs._index; }
-		bool	operator!=(const vectorIterator& rhs) { return _data != rhs._data || _index != rhs._index; }
-		bool	operator< (const vectorIterator& rhs) { return _data == rhs._data && _index <  rhs._index; }
-		bool	operator<=(const vectorIterator& rhs) { return _data == rhs._data && _index <= rhs._index; }
-		bool	operator> (const vectorIterator& rhs) { return _data == rhs._data && _index >  rhs._index; }
-		bool	operator>=(const vectorIterator& rhs) { return _data == rhs._data && _index >= rhs._index; }
-
-		operator	pointer() const { return *_data + _index; }
-	
-	private:
-		T**			_data;
-		size_type	_index;
-};
-
-template <typename T, class Allocator>
 class vector {
 
 	public:
 	
 		//	Typedefs
 	
-		typedef T									value_type;
-		typedef Allocator							allocator_type;
-		typedef	std::size_t							size_type;
-		typedef	std::ptrdiff_t						difference_type;
-		typedef	T&									reference;
-		typedef	const T&							const_reference;
-		typedef	typename Allocator::pointer			pointer;
-		typedef	typename Allocator::const_pointer	const_pointer;
-		typedef vectorIterator<T>					iterator;
-		typedef	vectorIterator<const T>				const_iterator;
-		typedef	reverseIterator<iterator>			reverse_iterator;
-		typedef reverseIterator<const_iterator>		const_reverse_iterator;
+		typedef T							value_type;
+		typedef Allocator					allocator_type;
+		typedef	std::size_t					size_type;
+		typedef	std::ptrdiff_t				difference_type;
+		typedef	T&							reference;
+		typedef	const T&					const_reference;
+		typedef	T*							pointer;
+		typedef	const T*					const_pointer;
+		typedef T*							iterator;
+		typedef	const T*					const_iterator;
+		typedef	reverseIterator<T*>			reverse_iterator;
+		typedef reverseIterator<const T*>	const_reverse_iterator;
 
 		//	Constructors
 	
@@ -89,14 +38,15 @@ class vector {
 		//	Initialize with n values
 		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
 			: _allocator(alloc), _capacity(n), _size(0), _data(_allocator.allocate(n)) {
+			std::cout << "C3\n";
 			assign(n, value);
 		}
 
 		//	Range constructor
-		template <typename InputIt>
-		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
-		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true)
+		template <typename InputIt, typename IC = typename iterator_traits<InputIt>::iterator_category>
+		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
 			: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
+			std::cout << "C4\n";
 			assign(first, last);
 		}
 
@@ -107,7 +57,7 @@ class vector {
 		};
 	
 		// Copy assignment
-		vector&	operator=( const vector& rhs ) {
+		vector&	operator=(const vector& rhs) {
 			if (this == &rhs)
 				return *this;
 			if (_data) {
@@ -121,19 +71,15 @@ class vector {
 		}
 
 		void	assign(size_type n, const T& value) {
+			clear();
 			reserve(n);
-			while (size() > n)
-				pop_back();
-			std::fill_n(begin(), size(), value);
-			while (size() < n)
-				push_back(value);
+			std::uninitialized_fill_n(begin(), n, value);
 		}
 
 		// TODO: ra/contigous iterator specialization;
 		// Use template specialization with InputIt::iterator_category
 		template <typename InputIt>
-		void	assign(InputIt first, InputIt last,
-		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
+		void	assign(InputIt first, InputIt last) {
 			clear();
 			for (; first != last; first++) {
 				push_back(*first);
@@ -144,30 +90,35 @@ class vector {
 
 		//	Element access
 	
-		reference	at(size_type index) const {
+		reference	at(size_type index) {
 			if (index >= size())
 				throw std::out_of_range("vector");
 			return _data[index];
 		}
 	
-		reference	operator[](size_type index) const {
+		reference	operator[](size_type index) {
+			return _data[index];
+		}
+	
+		const_reference	operator[](size_type index) const {
 			return _data[index];
 		}
 				
-		reference	front() const { return *begin(); }
-		reference	back() const { return *(end() - 1); }
-		pointer		data() const { return _data; }
+		reference	front() { return *begin(); }
+		reference	back() { return *(end() - 1); }
+
+		T*	data() { return _data; }
 	
 		//	Iterators
 
-		iterator			begin() const {	return const_cast<T**>(&_data); } // TODO: remove const_cast
+		iterator			begin() const {	return _data; }
 		iterator			end() const { return begin() + size(); }
-		reverse_iterator	rbegin() const { return reverse_iterator(end()); }
-		reverse_iterator	rend() const { return reverse_iterator(begin()); }
+		reverse_iterator	rbegin() const { return end(); }
+		reverse_iterator	rend() const { return begin(); }
 
 		//	Capacity
 
-		bool		empty() const { return _size == 0; }
+		bool		empty() const { return size() == 0; }
 		size_type	size() const { return _size; }
 		size_type	max_size() const { return _allocator.max_size(); }
 		size_type	capacity() const { return _capacity; }
@@ -187,27 +138,26 @@ class vector {
 		}
 
 		iterator	insert(iterator pos, const T& value) {
+			difference_type	index = pos - begin();
+		
 			insert(pos, 1, value);
-			return pos;
+			return begin() + index;
 		}
  
 		void	insert(iterator pos, size_type n, const T& value) {
 			shoveRight(pos, n);
-			for (size_type i = 0; i < n; i++)
-				_allocator.construct(pos++, value);
+			std::uninitialized_fill_n(pos, n, value);
 			_size += n;
 		}
 
 		// TODO: remove std:: (possibly)
 		// TODO: ra/contigous iterator specialization
 		template <typename InputIt>
-		void	insert(iterator pos, InputIt first, InputIt last,
-		typename enable_if<std::__is_input_iterator<InputIt>::value, bool>::type = true) {
+		void	insert(iterator pos, InputIt first, InputIt last) {
 			vector<T>	tmp(first, last);
 
 			shoveRight(pos, tmp.size());
-			for (size_type i = 0; i < tmp.size(); i++)
-				_allocator.construct(pos + i, tmp[i]);
+			std::uninitialized_copy(tmp.begin(), tmp.end(), pos);
 			_size += tmp.size();
 		}
 
@@ -235,10 +185,10 @@ class vector {
 
 		void	resize(size_type n, T value = T()) {
 			reserve(n);
-			while (size() > n)
-				pop_back();
 			if (size() < n)
 				insert(end(), n - size(), value);
+			if (size() > n)
+				erase(begin() + n, end());
 		}
 
 		void	swap(vector& other) {
