@@ -17,31 +17,48 @@ void	print(const T& value) {
 
 struct A {
 		static int count;
+		static int deleted;
 	public:
 		A(int n = 0): _p(new int), _index(count++) { 
-				#ifdef PRINT
-					std::cout << COLOR_GREEN "new: " << _index << COLOR_DEFAULT << "\n";
-				#endif
 			*_p = n;
+				#ifdef PRINT
+					std::cout << COLOR_GREEN "new: " << _index;
+					if (_p)
+						std::cout << " (" << *_p << ")";
+					std::cout << COLOR_DEFAULT << "\n";
+				#endif
 		}
 		~A() {
 				#ifdef PRINT
-					std::cout << COLOR_RED "delete: " << _index << COLOR_DEFAULT << "\n";
+					std::cout << COLOR_RED "delete: " << _index;
+					if (_p)
+						std::cout << " (" << *_p << ")"; 
+					std::cout << COLOR_DEFAULT << "\n";
 				#endif
 			delete _p;
+			deleted++;
 		}
 		A(const A& other): _p(new int), _index(count++) { *this = other; }
 		A&	operator=(const A& a) {
 				#ifdef PRINT
-					std::cout << COLOR_BLUE "copy: " << _index << COLOR_DEFAULT << "\n";
+					std::cout << COLOR_BLUE "copy: " << _index;
+					if (a._p)
+						std::cout << " (" << *a._p << ")"; 
+					std::cout << COLOR_DEFAULT << "\n";
 				#endif
 			delete _p;
 			_p = new int;
 			*_p = *a._p;
 			return *this;
 		}
+		A&	operator=(int n) {
+			*_p = n;
+			return *this;
+		}
 		operator	int() const { return *_p; }
-		bool	operator<(const A& rhs) { return _p < rhs._p; }
+		bool	operator<(const A& rhs) { return *_p < *rhs._p; }
+
+		int		alive() const { return count - deleted; }
 	
 	public:
 		int*	_p;
@@ -52,13 +69,14 @@ namespace std {
 	template <>
 	void	swap(A& lhs, A& rhs) {
 			#ifdef PRINT
-				std::cout << COLOR_YELLOW << "swap\n" << DEFAULT;
+				std::cout << COLOR_YELLOW << "swap\n" << COLOR_DEFAULT;
 			#endif
 		std::swap(lhs._p, rhs._p);
 	}
 }
 
 int A::count = 0;
+int A::deleted = 0;
 
 template <typename T>
 class myAllocator {

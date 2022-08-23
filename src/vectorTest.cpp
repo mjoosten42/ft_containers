@@ -1,5 +1,8 @@
+#include <array>
+#include <set>
+
+// #define PRINT
 #include "test.hpp"
-#include <array>  // std::array
 
 #ifdef STD 
 	#include <vector>
@@ -22,14 +25,22 @@ std::ostream&	operator<<(std::ostream& os, const ft::vector<T, U>& v) {
 }
 
 int	main() {
-
-	const A					a;
-	const std::array<A, 3>	array = { 1, 2, 3 };
-	const std::array<A, 3> 	b = { 4, 5, 6 };
-	ft::vector<A>			v(array.begin(), array.end());
-	ft::vector<A>			u(b.begin(), b.end());
-
 	std::cout << std::boolalpha;
+
+	clock_t	t = clock();
+	const A	a(42);
+
+	{
+
+	const std::array<A, 3>	array = { 1, 2, 3 };
+	std::set<A> 			set;
+
+	set.insert(4);
+	set.insert(5);
+	set.insert(6);
+
+	ft::vector<A>	v(array.begin(), array.end());
+	ft::vector<A>	u(set.begin(), set.end());
 
 	{
 		print("Constructors\n");
@@ -76,10 +87,20 @@ int	main() {
 		print("Iterators\n");
 		print(v);
 		for (ft::vector<A>::iterator it = v.begin(); it != v.end(); it++) {
+			*it = (*it + *it);
+			print(*it);			
+		}
+	
+		for (ft::vector<A>::const_iterator it = v.begin(); it != v.end(); it++) {
 			print(*it);			
 		}
 	
 		for (ft::vector<A>::reverse_iterator it = v.rbegin(); it != v.rend(); it++) {
+			*it = *it / 2;
+			print(*it);			
+		}
+	
+		for (ft::vector<A>::const_reverse_iterator it = v.rbegin(); it != v.rend(); it++) {
 			print(*it);			
 		}
 	}
@@ -105,19 +126,11 @@ int	main() {
 	{
 		print("insert\n");
 		print(*v.insert(v.begin(), a));
-		v.insert(v.begin() + 1, 3, a);
+		v.insert(v.begin() + 1, 2, a);
 		v.insert(v.begin(), array.begin(), array.end());
-		v.insert(v.begin() + 1, b.begin(), b.end());
+		v.insert(v.begin() + 1, set.begin(), set.end());
 		v.insert(v.begin() + 2, array.begin(), array.end());
 		print(v);
-	
-		print("Self-insert\n");
-		print(v);
-		v.insert(v.begin(), v.begin(), v.end());
-		print(v);
-		v.insert(v.begin(), v.begin(), v.end());
-		print(v);
-	
 		print("erase\n");
 		print(*v.erase(v.begin()));
 		print(*v.erase(v.begin() + 2));
@@ -146,38 +159,49 @@ int	main() {
 
 	{
 		print("comparisons\n");
-		u.assign(b.begin(), b.end());
 		v.assign(array.begin(), array.end());
+		u.assign(set.begin(), set.end());
 		print(v);
 		print(u);
 		print(v == u);
 		print(v != u);
-		print(v > u);
+		print(v >  u);
 		print(v >= u);
-		print(v < u);
+		print(v <  u);
 		print(v <= u);
-		v.assign(b.begin(), b.end());
+		v.assign(set.begin(), set.end());
 		print(v == u);
 		print(v != u);
-		print(v > u);
+		print(v >  u);
 		print(v >= u);
-		print(v < u);
+		print(v <  u);
 		print(v <= u);
 	}
 
 	{
 		print("swap\n");
 	
-		v.assign(array.begin(), array.end());
-		for (int i = 0; i < 2; i++)
-			v.insert(v.begin(), v.begin(), v.end());
-		u = v;
-		std::reverse(u.begin(), u.end());
-		print(v);
-		print(u);
-		for (int i = 0; i < 99; i++)
+		v.clear();
+		u.clear();
+		for (int i = 0; i < 50; i++) {
+			v.push_back(i);
 			v.swap(u);
+		}
 		print(v);
 		print(u);
 	}
+
+	}
+
+	if (a.alive() != 1)
+		std::cout << "Still alive: " << a.alive() - 1 << "\n";
+
+	#ifdef STD
+		std::cout << "\nstd: ";
+	#else
+		std::cout << "\nft: ";
+	#endif
+
+	t = clock() - t;
+	std::cout << 1000 * ((float)t / CLOCKS_PER_SEC) << " ms\n";
 }

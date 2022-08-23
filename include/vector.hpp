@@ -3,7 +3,6 @@
 
 #include <memory> // std::allocator
 #include <cstddef> // std::size_t, std::ptrdiff_t
-#include "meta.hpp" // enable_if
 #include "iterator.hpp"
 
 namespace ft 
@@ -16,18 +15,18 @@ class vector {
 	
 		//	Typedefs
 	
-		typedef T							value_type;
-		typedef Allocator					allocator_type;
-		typedef	std::size_t					size_type;
-		typedef	std::ptrdiff_t				difference_type;
-		typedef	T&							reference;
-		typedef	const T&					const_reference;
-		typedef	T*							pointer;
-		typedef	const T*					const_pointer;
-		typedef T*							iterator;
-		typedef	const T*					const_iterator;
-		typedef	reverseIterator<T*>			reverse_iterator;
-		typedef reverseIterator<const T*>	const_reverse_iterator;
+		typedef T								value_type;
+		typedef Allocator						allocator_type;
+		typedef	std::size_t						size_type;
+		typedef	std::ptrdiff_t					difference_type;
+		typedef	T&								reference;
+		typedef	const T&						const_reference;
+		typedef	T*								pointer;
+		typedef	const T*						const_pointer;
+		typedef T*								iterator;
+		typedef	const T*						const_iterator;
+		typedef	reverseIterator<iterator>		reverse_iterator;
+		typedef reverseIterator<const_iterator>	const_reverse_iterator;
 
 		//	Constructors
 	
@@ -38,15 +37,14 @@ class vector {
 		//	Initialize with n values
 		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
 			: _allocator(alloc), _capacity(n), _size(0), _data(_allocator.allocate(n)) {
-			std::cout << "C3\n";
 			assign(n, value);
 		}
 
 		//	Range constructor
-		template <typename InputIt, typename IC = typename iterator_traits<InputIt>::iterator_category>
-		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
+		template <typename InputIt>
+		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
+				typename iterator_traits<InputIt>::iterator_category* = NULL)
 			: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
-			std::cout << "C4\n";
 			assign(first, last);
 		}
 
@@ -60,7 +58,7 @@ class vector {
 		vector&	operator=(const vector& rhs) {
 			if (this == &rhs)
 				return *this;
-			if (_data) {
+			if (!empty()) {
 				clear();
 				_allocator.deallocate(_data, capacity());
 			}
@@ -74,29 +72,33 @@ class vector {
 			clear();
 			reserve(n);
 			std::uninitialized_fill_n(begin(), n, value);
+			_size = n;
 		}
 
-		// TODO: ra/contigous iterator specialization;
-		// Use template specialization with InputIt::iterator_category
 		template <typename InputIt>
-		void	assign(InputIt first, InputIt last) {
+		void	assign(InputIt first, InputIt last,
+				typename iterator_traits<InputIt>::iterator_category* = NULL) {
 			clear();
-			for (; first != last; first++) {
-				push_back(*first);
-			}
+			insert(begin(), first, last);
 		}
 	
 		allocator_type	get_allocator() const { return _allocator; }
 
 		//	Element access
 	
-		reference	at(size_type index) {
+		reference		at(size_type index) {
 			if (index >= size())
 				throw std::out_of_range("vector");
 			return _data[index];
 		}
 	
-		reference	operator[](size_type index) {
+		const_reference	at(size_type index) const {
+			if (index >= size())
+				throw std::out_of_range("vector");
+			return _data[index];
+		}
+	
+		reference		operator[](size_type index) {
 			return _data[index];
 		}
 	
@@ -104,17 +106,25 @@ class vector {
 			return _data[index];
 		}
 				
-		reference	front() { return *begin(); }
-		reference	back() { return *(end() - 1); }
+		reference		front() { return *begin(); }
+		const_reference	front() const { return *begin(); }
+		reference		back() { return *(end() - 1); }
+		const_reference	back() const { return *(end() - 1); }
 
-		T*	data() { return _data; }
+		pointer			data() { return _data; }
+		const_pointer	data() const { return _data; }
 	
 		//	Iterators
 
-		iterator			begin() const {	return _data; }
-		iterator			end() const { return begin() + size(); }
-		reverse_iterator	rbegin() const { return end(); }
-		reverse_iterator	rend() const { return begin(); }
+		iterator			begin() { return data(); }
+		iterator			end() { return begin() + size(); }
+		reverse_iterator	rbegin() { return end(); }
+		reverse_iterator	rend() { return begin(); }
+
+		const_iterator			begin() const {	return _data; }
+		const_iterator			end() const { return begin() + size(); }
+		const_reverse_iterator	rbegin() const { return const_iterator(end()); }
+		const_reverse_iterator	rend() const { return begin(); }
 
 		//	Capacity
 
@@ -133,12 +143,11 @@ class vector {
 		//	Modifiers
 
 		void	clear() {
-			while (size())
-				pop_back();
+			erase(begin(), end());
 		}
 
 		iterator	insert(iterator pos, const T& value) {
-			difference_type	index = pos - begin();
+			size_type	index = pos - begin();
 		
 			insert(pos, 1, value);
 			return begin() + index;
@@ -150,15 +159,11 @@ class vector {
 			_size += n;
 		}
 
-		// TODO: remove std:: (possibly)
-		// TODO: ra/contigous iterator specialization
+		// Chooses an insert depending on the iterator tag
 		template <typename InputIt>
 		void	insert(iterator pos, InputIt first, InputIt last) {
-			vector<T>	tmp(first, last);
-
-			shoveRight(pos, tmp.size());
-			std::uninitialized_copy(tmp.begin(), tmp.end(), pos);
-			_size += tmp.size();
+			typedef typename iterator_traits<InputIt>::iterator_category IC;
+			doInsert(pos, first, last, IC());
 		}
 
 		iterator	erase(iterator pos) {
@@ -166,8 +171,11 @@ class vector {
 		}
 	
 		iterator	erase(iterator first, iterator last) {
+			size_type	size = last - first;
+		
 			std::move(last, end(), first);
-			_size -= last - first;
+			while (size--)
+				pop_back();
 			return first;
 		}
 	
@@ -199,10 +207,17 @@ class vector {
 		}
 		
 		// Comparison operators
-
-		bool	operator==(const vector& rhs) const { return size() == rhs.size() && std::equal(begin(), end(), rhs.begin()); } // TODO: std --> ft
+ 		
+		// TODO: std --> ft
+		bool	operator==(const vector& rhs) const {
+			return size() == rhs.size() && std::equal(begin(), end(), rhs.begin());
+		}
+	
+		bool	operator< (const vector& rhs) const {
+			return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
+		}
+	
 		bool	operator!=(const vector& rhs) const { return !(*this == rhs); }
-		bool	operator< (const vector& rhs) const { return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end()); } // TODO: std --> ft
 		bool	operator<=(const vector& rhs) const { return *this < rhs || *this == rhs;	}
 		bool	operator> (const vector& rhs) const { return rhs < *this; }
 		bool	operator>=(const vector& rhs) const { return rhs <= *this; }
@@ -222,13 +237,48 @@ class vector {
 		}
 
 		void	shoveRight(iterator pos, size_type n) {
+			size_type	index = pos - begin();
 			size_type	i = end() - pos;
 		
 			reserve(size() + n);
+			pos = begin() + index;
 			while (i--) {
 				_allocator.construct(pos + n + i, *(pos + i));
 				_allocator.destroy(pos + i);
 			}
+		}
+	
+		// InputIt
+		template <typename InputIt>
+		void	doInsert(iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
+			size_type	index = pos - begin();
+			vector<T>	tmp(first, last);
+
+			shoveRight(pos, tmp.size());
+			std::uninitialized_copy(tmp.begin(), tmp.end(), begin() + index);
+			_size += tmp.size();
+		}
+
+		// ForwardIt && BiDirectionalIt
+		template <typename InputIt>
+		void	doInsert(iterator pos, InputIt first, InputIt last, std::forward_iterator_tag) {
+			size_type	index = pos - begin();
+			size_type	size = std::distance(first, last);
+		
+			shoveRight(pos, size);
+			std::uninitialized_copy(first, last, begin() + index);
+			_size += size;
+		}
+	
+		// RandomAccessIt && ContigiousIt
+		template <typename InputIt>
+		void	doInsert(iterator pos, InputIt first, InputIt last, std::random_access_iterator_tag) {
+			size_type	index = pos - begin();
+			size_type	size = last - first;
+		
+			shoveRight(pos, size);
+			std::uninitialized_copy(first, last, begin() + index);
+			_size += size;
 		}
 
 	protected:

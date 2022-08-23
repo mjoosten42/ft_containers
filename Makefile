@@ -47,6 +47,14 @@ std: fclean
 std: CXXFLAGS += -D STD
 std: all
 
-.PHONY = clean fclean re std
+diff:
+	make re
+	./$(NAME) > ft 2>&1
+	make std
+	./$(NAME) > std 2>&1
+	diff ft std > diff.log || true
+	$(RM) ft std
+
+.PHONY = clean fclean re run std diff
 
 -include $(DEP)
