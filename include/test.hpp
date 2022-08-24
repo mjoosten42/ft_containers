@@ -28,6 +28,7 @@ struct A {
 					std::cout << COLOR_DEFAULT << "\n";
 				#endif
 		}
+		
 		~A() {
 				#ifdef PRINT
 					std::cout << COLOR_RED "delete: " << _index;
@@ -38,7 +39,9 @@ struct A {
 			delete _p;
 			deleted++;
 		}
+
 		A(const A& other): _p(new int), _index(count++) { *this = other; }
+
 		A&	operator=(const A& a) {
 				#ifdef PRINT
 					std::cout << COLOR_BLUE "copy: " << _index;
@@ -51,11 +54,13 @@ struct A {
 			*_p = *a._p;
 			return *this;
 		}
+
 		A&	operator=(int n) {
 			*_p = n;
 			return *this;
 		}
 		operator	int() const { return *_p; }
+	
 		bool	operator<(const A& rhs) { return *_p < *rhs._p; }
 
 		friend std::istream&	operator>>(std::istream& is, A& a) {

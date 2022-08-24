@@ -40,31 +40,35 @@ int	main() {
 	set.insert(5);
 	set.insert(6);
 
-	std::istringstream	iss("7 8 9");
-
 	ft::vector<A>	v(array.begin(), array.end());
 	ft::vector<A>	u(set.begin(), set.end());
 
 	{
 		print("Constructors\n");
+		std::istringstream	iss("7 8 9");
+	
 		ft::vector<A>	v1; print(v1);
 		ft::vector<A>	v3(3, 42); print(v3);
-		ft::vector<A>	v4(array.begin(), array.end()); print(v4);
+		ft::vector<A>	v4a(array.begin(), array.end()); print(v4a);
+		ft::vector<A>	v4b(set.begin(), set.end()); print(v4b);
+		ft::vector<A>	v4c((std::istream_iterator<A>(iss)), std::istream_iterator<A>()); print(v4c);
 		ft::vector<A>	v5(v); print(v5);
 
 		print("Copy assignment\n");
-		v5 = v4;
+		v5 = v3;
 		print(v5);
 	}
 
 	{
 		print("assign\n");
-		v.assign(3, 42);
+		v.assign(5, 42);
 		print(v);
 		v.assign(array.begin(), array.end());
 		print(v);
 		v.assign(set.begin(), set.end());
 		print(v);
+	
+		std::istringstream	iss("7 8 9");
 		v.assign(std::istream_iterator<A>(iss), std::istream_iterator<A>());
 		print(v);
 	}
@@ -122,7 +126,7 @@ int	main() {
 		print(v.get_allocator().max_size());
 
 		v.reserve(10);
-		print(v.capacity());
+		print(v.capacity() >= 10);
 		print(v.size());
 	}
 
@@ -130,12 +134,16 @@ int	main() {
 
 	{
 		print("insert\n");
-		v.insert(v.begin(), 3, 42);
+		std::istringstream	iss("7 8 9");
+	
 		print(*v.insert(v.begin(), a));
+		print(*v.insert(v.end() - 1, a));
+		v.insert(v.begin(), 3, 42);
 		v.insert(v.begin() + 1, 2, a);
 		v.insert(v.begin(), array.begin(), array.end());
-		v.insert(v.begin() + 1, set.begin(), set.end());
-		v.insert(v.begin() + 2, array.begin(), array.end());
+		v.insert(v.begin() + 0, set.begin(), set.end());
+		v.insert(v.begin() + 3, array.begin(), array.end());
+		v.insert(v.begin() + 6, std::istream_iterator<A>(iss), std::istream_iterator<A>());
 		print(v);
 		print("erase\n");
 		print(*v.erase(v.begin()));
@@ -143,6 +151,7 @@ int	main() {
 		print(*v.erase(v.begin(), v.begin() + 1));
 		print(*v.erase(v.begin() + 1, v.begin() + 3));
 		print(*v.erase(v.begin() + 3, v.end() - 1));
+		print(v);
 		print(*v.erase(v.begin(), v.end()));
 		print(v);
 	}
