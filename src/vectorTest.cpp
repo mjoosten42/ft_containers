@@ -1,5 +1,6 @@
 #include <array>
 #include <set>
+#include <sstream>
 
 // #define PRINT
 #include "test.hpp"
@@ -8,7 +9,7 @@
 	#include <vector>
 	namespace ft = std;
 #else
-	#include <vector.hpp>
+	#include "vector.hpp"
 #endif
 
 template <typename T, typename U>
@@ -33,11 +34,13 @@ int	main() {
 	{
 
 	const std::array<A, 3>	array = { 1, 2, 3 };
-	std::set<A> 			set;
+	std::set<A> set;
 
 	set.insert(4);
 	set.insert(5);
 	set.insert(6);
+
+	std::istringstream	iss("7 8 9");
 
 	ft::vector<A>	v(array.begin(), array.end());
 	ft::vector<A>	u(set.begin(), set.end());
@@ -45,7 +48,7 @@ int	main() {
 	{
 		print("Constructors\n");
 		ft::vector<A>	v1; print(v1);
-		ft::vector<A>	v3(3, a); print(v3);
+		ft::vector<A>	v3(3, 42); print(v3);
 		ft::vector<A>	v4(array.begin(), array.end()); print(v4);
 		ft::vector<A>	v5(v); print(v5);
 
@@ -56,11 +59,13 @@ int	main() {
 
 	{
 		print("assign\n");
-		v.assign(3, a);
-		print(v);
-		v.assign(1, a);
+		v.assign(3, 42);
 		print(v);
 		v.assign(array.begin(), array.end());
+		print(v);
+		v.assign(set.begin(), set.end());
+		print(v);
+		v.assign(std::istream_iterator<A>(iss), std::istream_iterator<A>());
 		print(v);
 	}
 
@@ -80,7 +85,7 @@ int	main() {
 		print(v[2]);
 		print(v.front());
 		print(v.back());
-		print(v.data());
+		print(*v.data());
 	}
 
 	{
@@ -125,6 +130,7 @@ int	main() {
 
 	{
 		print("insert\n");
+		v.insert(v.begin(), 3, 42);
 		print(*v.insert(v.begin(), a));
 		v.insert(v.begin() + 1, 2, a);
 		v.insert(v.begin(), array.begin(), array.end());

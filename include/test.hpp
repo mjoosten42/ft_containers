@@ -58,6 +58,10 @@ struct A {
 		operator	int() const { return *_p; }
 		bool	operator<(const A& rhs) { return *_p < *rhs._p; }
 
+		friend std::istream&	operator>>(std::istream& is, A& a) {
+			return is >> *a._p;
+		}
+
 		int		alive() const { return count - deleted; }
 	
 	public:

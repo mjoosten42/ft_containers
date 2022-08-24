@@ -37,23 +37,47 @@ class reverseIterator {
 		typedef typename iterator_traits<Iterator>::pointer				pointer;
 		typedef typename iterator_traits<Iterator>::reference			reference;
 
-		reverseIterator(): _it() {};
-		reverseIterator(const Iterator& it): _it(it) {};
-		reverseIterator(const reverseIterator& other): _it(other._it) {};
-
-		reference	operator*() const { Iterator it(_it); return *--it; }
-		reference	operator->() const { return &operator*(); }
+		reverseIterator(): current() {};
 	
-		reverseIterator&	operator++() { --_it; return *this; }
-		reverseIterator&	operator--() { ++_it; return *this; }
+		explicit	reverseIterator(Iterator it): current(it) {};
+
+		template <typename U>
+		reverseIterator(const reverseIterator<U>& other): current(other.base()) {};
+
+		template <typename U>
+		reverseIterator&	operator=(const reverseIterator<U>& rhs) {
+			current = rhs.base();
+			return *this;
+		}
+
+		Iterator	base() const { return current; }
+
+		reference	operator*() const { Iterator it = current; return *--it; }
+		reference	operator->() const { return &operator*(); }
+
+		reference	operator[](difference_type n) const { Iterator it = current; return *(it - n - 1); }
+	
+		reverseIterator&	operator++() { --current; return *this; }
+		reverseIterator&	operator--() { ++current; return *this; }
+	
 		reverseIterator		operator++(int) { reverseIterator tmp(*this); ++(*this); return tmp; }
 		reverseIterator		operator--(int) { reverseIterator tmp(*this); --(*this); return tmp; }
 
-		bool	operator==(const reverseIterator& rhs) { return _it == rhs._it; }
-		bool	operator!=(const reverseIterator& rhs) { return _it != rhs._it; }
+		reverseIterator		operator+ (difference_type n) const { return reverseIterator(current + n); }
+		reverseIterator		operator- (difference_type n) const { return reverseIterator(current - n); }
 	
-	private:
-		Iterator	_it;
+		reverseIterator&	operator+=(difference_type n) const { current += n; return *this; }
+		reverseIterator&	operator-=(difference_type n) const { current -= n; return *this; }
+
+		bool	operator==(const reverseIterator& rhs) { return current == rhs.base(); }
+		bool	operator!=(const reverseIterator& rhs) { return current != rhs.base(); }
+		bool	operator< (const reverseIterator& rhs) { return current <  rhs.base(); }
+		bool	operator<=(const reverseIterator& rhs) { return current <= rhs.base(); }
+		bool	operator> (const reverseIterator& rhs) { return current >  rhs.base(); }
+		bool	operator>=(const reverseIterator& rhs) { return current >= rhs.base(); }
+	
+	protected:
+		Iterator	current;
 };
 
 } // namespace ft

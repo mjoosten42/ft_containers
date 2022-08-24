@@ -4,6 +4,7 @@
 #include <memory> // std::allocator
 #include <cstddef> // std::size_t, std::ptrdiff_t
 #include "iterator.hpp"
+#include "meta.hpp"
 
 namespace ft 
 {
@@ -36,16 +37,16 @@ class vector {
 
 		//	Initialize with n values
 		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
-			: _allocator(alloc), _capacity(n), _size(0), _data(_allocator.allocate(n)) {
-			assign(n, value);
+			: _allocator(alloc), _capacity(n), _size(n), _data(_allocator.allocate(n)) {
+			std::uninitialized_fill_n(begin(), n, value);
 		}
 
 		//	Range constructor
 		template <typename InputIt>
 		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
-				typename iterator_traits<InputIt>::iterator_category* = NULL)
+				typename ft::enable_if<!ft::is_integral<InputIt>::value, bool>::type = true)
 			: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
-			assign(first, last);
+			insert(begin(), first, last);
 		}
 
 		//	Destructor
@@ -76,8 +77,8 @@ class vector {
 		}
 
 		template <typename InputIt>
-		void	assign(InputIt first, InputIt last,
-				typename iterator_traits<InputIt>::iterator_category* = NULL) {
+		typename ft::enable_if<!ft::is_integral<InputIt>::value, void>::type
+		assign(InputIt first, InputIt last) {
 			clear();
 			insert(begin(), first, last);
 		}
@@ -116,14 +117,14 @@ class vector {
 	
 		//	Iterators
 
-		iterator			begin() { return data(); }
-		iterator			end() { return begin() + size(); }
-		reverse_iterator	rbegin() { return end(); }
-		reverse_iterator	rend() { return begin(); }
+		iterator		begin() { return data(); }
+		iterator		end() { return begin() + size(); }
+		const_iterator	begin() const {	return _data; }
+		const_iterator	end() const { return begin() + size(); }
 
-		const_iterator			begin() const {	return _data; }
-		const_iterator			end() const { return begin() + size(); }
-		const_reverse_iterator	rbegin() const { return const_iterator(end()); }
+		reverse_iterator		rbegin() { return reverse_iterator(end()); }
+		reverse_iterator		rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator	rbegin() const { return end(); }
 		const_reverse_iterator	rend() const { return begin(); }
 
 		//	Capacity
@@ -161,7 +162,8 @@ class vector {
 
 		// Chooses an insert depending on the iterator tag
 		template <typename InputIt>
-		void	insert(iterator pos, InputIt first, InputIt last) {
+		typename ft::enable_if<!ft::is_integral<InputIt>::value, void>::type
+		insert(iterator pos, InputIt first, InputIt last) {
 			typedef typename iterator_traits<InputIt>::iterator_category IC;
 			doInsert(pos, first, last, IC());
 		}
@@ -252,8 +254,10 @@ class vector {
 		template <typename InputIt>
 		void	doInsert(iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
 			size_type	index = pos - begin();
-			vector<T>	tmp(first, last);
+			vector<T>	tmp;
 
+			for (; first != last; first++)
+				tmp.push_back(*first);
 			shoveRight(pos, tmp.size());
 			std::uninitialized_copy(tmp.begin(), tmp.end(), begin() + index);
 			_size += tmp.size();

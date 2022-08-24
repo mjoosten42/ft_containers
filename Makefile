@@ -48,10 +48,10 @@ std: CXXFLAGS += -D STD
 std: all
 
 diff:
-	make re
-	./$(NAME) > ft 2>&1
 	make std
 	./$(NAME) > std 2>&1
+	make re
+	./$(NAME) > ft 2>&1
 	diff ft std > diff.log || true
 	$(RM) ft std
 
