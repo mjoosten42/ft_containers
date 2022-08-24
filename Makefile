@@ -1,6 +1,6 @@
 NAME = ft_containers
 CXX = c++
-CXXFLAGS = -std=c++98 -Wall -Werror -Wextra -Wpedantic -MMD
+CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD #-std=c++98
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
@@ -13,7 +13,7 @@ LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
 INC = -I include
 
 SRCDIR = src
-SRC = vectorTest.cpp
+SRC = vector.cpp
 
 OBJDIR = obj
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))

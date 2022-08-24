@@ -1,10 +1,14 @@
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
-#include <memory> // std::allocator
+#include <memory> // std::allocator, std::uninitialized_fill_n
 #include <cstddef> // std::size_t, std::ptrdiff_t
+#include <utility> // std::move
 #include "iterator.hpp"
 #include "meta.hpp"
+
+// TODO: remove
+#include <algorithm>
 
 namespace ft 
 {
@@ -215,6 +219,7 @@ class vector {
 			return size() == rhs.size() && std::equal(begin(), end(), rhs.begin());
 		}
 	
+		// TODO: std --> ft
 		bool	operator< (const vector& rhs) const {
 			return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
 		}
