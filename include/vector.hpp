@@ -216,14 +216,12 @@ class vector {
 		
 		// Comparison operators
  		
-		// TODO: std --> ft
 		bool	operator==(const vector& rhs) const {
-			return size() == rhs.size() && std::equal(begin(), end(), rhs.begin());
+			return size() == rhs.size() && ft::equal(begin(), end(), rhs.begin());
 		}
 	
-		// TODO: std --> ft
 		bool	operator< (const vector& rhs) const {
-			return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
+			return ft::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
 		}
 	
 		bool	operator!=(const vector& rhs) const { return !(*this == rhs); }
