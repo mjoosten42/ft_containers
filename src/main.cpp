@@ -1,12 +1,15 @@
-#include "vector"
+#include "meta.hpp"
+#include "vector.hpp"
 
 #include <sstream>
 #include <iostream>
 
 int	main() {
-	std::istringstream	iss("7 8 9");
+	ft::vector<int>	v;
+	ft::vector<int>	w;
+	
+	v.resize(10);
+	w = v;
 
-	std::vector<int>	d((std::istream_iterator<int>(iss)), std::istream_iterator<int>());
-
-	std::cout << d.capacity() << "\n";
+	std::cout << (v == w) << "\n";
 }

@@ -213,18 +213,18 @@ class vector {
 		
 		// Comparison operators
  		
-		friend bool	operator==(const vector& lhs, const vector& rhs) const {
+		friend bool	operator==(const vector& lhs, const vector& rhs) {
 			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
 		}
 	
-		friend bool	operator< (const vector& lhs, const vector& rhs) const {
+		friend bool	operator< (const vector& lhs, const vector& rhs) {
 			return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 		}
 	
-		friend bool	operator!=(const vector& lhs, const vector& rhs) const { return !(lhs == rhs); }
-		friend bool	operator<=(const vector& lhs, const vector& rhs) const { return lhs < rhs || lhs == rhs;	}
-		friend bool	operator> (const vector& lhs, const vector& rhs) const { return rhs < lhs; }
-		friend bool	operator>=(const vector& lhs, const vector& rhs) const { return rhs <= lhs; }
+		friend bool	operator!=(const vector& lhs, const vector& rhs) { return !(lhs == rhs); }
+		friend bool	operator<=(const vector& lhs, const vector& rhs) { return lhs < rhs || lhs == rhs;	}
+		friend bool	operator> (const vector& lhs, const vector& rhs) { return rhs < lhs; }
+		friend bool	operator>=(const vector& lhs, const vector& rhs) { return rhs <= lhs; }
 
 	private:
 

@@ -1,6 +1,6 @@
-NAME = ft_containers
-CXX = c++
-CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD #-std=c++98
+NAME := ft_containers
+CXX := c++
+CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD -std=c++98
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
@@ -13,7 +13,7 @@ LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
 INC = -I include
 
 SRCDIR = src
-SRC = vector.cpp
+SRC = main.cpp
 
 OBJDIR = obj
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
@@ -43,18 +43,11 @@ re: fclean
 run: all
 	./$(NAME)
 
-std: fclean
-std: CXXFLAGS += -D STD
-std: all
+TESTFILES = vector.cpp
 
-diff:
-	make std
-	./$(NAME) > std 2>&1
-	make re
-	./$(NAME) > ft 2>&1
-	diff ft std > diff.log || true
-	$(RM) ft std
+test:
+	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) && ./a.out && $(RM) a.out
 
-.PHONY = clean fclean re run std diff
+.PHONY = clean fclean re run test
 
 -include $(DEP)
