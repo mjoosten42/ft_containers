@@ -19,12 +19,12 @@ struct pair {
 		return *this;
 	}
 
-	bool	operator==(const pair& rhs) { return first == rhs.first && second == rhs.second; }
-	bool	operator!=(const pair& rhs) { return first != rhs.first || second != rhs.second; }
-	bool	operator< (const pair& rhs) { return first <  rhs.first || (first == rhs.first && second < rhs.second); }
-	bool	operator<=(const pair& rhs) { return *this <  rhs || *this == rhs; }
-	bool	operator> (const pair& rhs) { return !(rhs <= *this); }
-	bool	operator>=(const pair& rhs) { return !(rhs <  *this); }
+	friend bool	operator==(const pair& lhs, const pair& rhs) { return lhs.first == rhs.first && lhs.second == rhs.second; }
+	friend bool	operator!=(const pair& lhs, const pair& rhs) { return lhs.first != rhs.first || lhs.second != rhs.second; }
+	friend bool	operator< (const pair& lhs, const pair& rhs) { return lhs.first <  rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second); }
+	friend bool	operator<=(const pair& lhs, const pair& rhs) { return lhs <  rhs || lhs == rhs; }
+	friend bool	operator> (const pair& lhs, const pair& rhs) { return rhs <  lhs; }
+	friend bool	operator>=(const pair& lhs, const pair& rhs) { return rhs <= lhs; }
 
 	T1	first;
 	T2	second;

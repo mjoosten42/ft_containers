@@ -3,12 +3,9 @@
 
 #include <memory> // std::allocator, std::uninitialized_fill_n
 #include <cstddef> // std::size_t, std::ptrdiff_t
-#include <utility> // std::move
+#include <algorithm> // std::move
 #include "iterator.hpp"
 #include "meta.hpp"
-
-// TODO: remove
-#include <algorithm>
 
 namespace ft 
 {
@@ -216,18 +213,18 @@ class vector {
 		
 		// Comparison operators
  		
-		bool	operator==(const vector& rhs) const {
-			return size() == rhs.size() && ft::equal(begin(), end(), rhs.begin());
+		friend bool	operator==(const vector& lhs, const vector& rhs) const {
+			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
 		}
 	
-		bool	operator< (const vector& rhs) const {
-			return ft::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
+		friend bool	operator< (const vector& lhs, const vector& rhs) const {
+			return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 		}
 	
-		bool	operator!=(const vector& rhs) const { return !(*this == rhs); }
-		bool	operator<=(const vector& rhs) const { return *this < rhs || *this == rhs;	}
-		bool	operator> (const vector& rhs) const { return rhs < *this; }
-		bool	operator>=(const vector& rhs) const { return rhs <= *this; }
+		friend bool	operator!=(const vector& lhs, const vector& rhs) const { return !(lhs == rhs); }
+		friend bool	operator<=(const vector& lhs, const vector& rhs) const { return lhs < rhs || lhs == rhs;	}
+		friend bool	operator> (const vector& lhs, const vector& rhs) const { return rhs < lhs; }
+		friend bool	operator>=(const vector& lhs, const vector& rhs) const { return rhs <= lhs; }
 
 	private:
 

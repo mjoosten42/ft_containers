@@ -69,12 +69,12 @@ class reverseIterator {
 		reverseIterator&	operator+=(difference_type n) const { current += n; return *this; }
 		reverseIterator&	operator-=(difference_type n) const { current -= n; return *this; }
 
-		bool	operator==(const reverseIterator& rhs) { return current == rhs.base(); }
-		bool	operator!=(const reverseIterator& rhs) { return current != rhs.base(); }
-		bool	operator< (const reverseIterator& rhs) { return current <  rhs.base(); }
-		bool	operator<=(const reverseIterator& rhs) { return current <= rhs.base(); }
-		bool	operator> (const reverseIterator& rhs) { return current >  rhs.base(); }
-		bool	operator>=(const reverseIterator& rhs) { return current >= rhs.base(); }
+		friend bool	operator==(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() == rhs.base(); }
+		friend bool	operator!=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() != rhs.base(); }
+		friend bool	operator< (const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() <  rhs.base(); }
+		friend bool	operator<=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() <= rhs.base(); }
+		friend bool	operator> (const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() >  rhs.base(); }
+		friend bool	operator>=(const reverseIterator& lhs, const reverseIterator& rhs) { return lhs.base() >= rhs.base(); }
 	
 	protected:
 		Iterator	current;

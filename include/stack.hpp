@@ -27,12 +27,12 @@ class stack {
 		void	push(const T& value) { _cont.push_back(value); }
 		void	pop(const T& value) { _cont.pop_back(value); }
 		
-		bool	operator==(const stack& rhs) { return _cont == rhs._cont; }
-		bool	operator!=(const stack& rhs) { return _cont != rhs._cont; }
-		bool	operator< (const stack& rhs) { return _cont <  rhs._cont; }
-		bool	operator<=(const stack& rhs) { return _cont <= rhs._cont; }
-		bool	operator> (const stack& rhs) { return _cont >  rhs._cont; }
-		bool	operator>=(const stack& rhs) { return _cont >= rhs._cont; }
+		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs._cont == rhs._cont; }
+		friend bool	operator!=(const stack& lhs, const stack& rhs) { return lhs._cont != rhs._cont; }
+		friend bool	operator< (const stack& lhs, const stack& rhs) { return lhs._cont <  rhs._cont; }
+		friend bool	operator<=(const stack& lhs, const stack& rhs) { return lhs._cont <= rhs._cont; }
+		friend bool	operator> (const stack& lhs, const stack& rhs) { return lhs._cont >  rhs._cont; }
+		friend bool	operator>=(const stack& lhs, const stack& rhs) { return lhs._cont >= rhs._cont; }
 	
 	private:
 		Container	_cont;
