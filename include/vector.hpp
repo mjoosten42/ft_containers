@@ -123,13 +123,13 @@ class vector {
 
 		iterator		begin() { return data(); }
 		iterator		end() { return begin() + size(); }
-		const_iterator	begin() const {	return _data; }
+		const_iterator	begin() const {	return data(); }
 		const_iterator	end() const { return begin() + size(); }
 
 		reverse_iterator		rbegin() { return reverse_iterator(end()); }
 		reverse_iterator		rend() { return reverse_iterator(begin()); }
-		const_reverse_iterator	rbegin() const { return end(); }
-		const_reverse_iterator	rend() const { return begin(); }
+		const_reverse_iterator	rbegin() const { return const_reverse_iterator(end()); }
+		const_reverse_iterator	rend() const { return const_reverse_iterator(begin()); }
 
 		//	Capacity
 
@@ -159,8 +159,10 @@ class vector {
 		}
  
 		void	insert(iterator pos, size_type n, const T& value) {
+			size_type	index = pos - begin();
+
 			shoveRight(pos, n);
-			std::uninitialized_fill_n(pos, n, value);
+			std::uninitialized_fill_n(begin() + index, n, value);
 			_size += n;
 		}
 
