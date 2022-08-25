@@ -16,10 +16,8 @@
 namespace ft
 {
 
-#define LEFT 0
-#define RIGHT 1
-
-#define UNALIGNED 2
+#define LEFT false
+#define RIGHT true
 
 template <typename T>
 struct Node {
@@ -31,7 +29,7 @@ struct Node {
 
 	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {}
 
-	Node*&	operator[](int dir) { return dir ? right : left; }
+	Node*&	operator[](bool dir) { return dir ? right : left; }
 
 	// TODO: remove
 	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
@@ -63,7 +61,7 @@ struct rbtreeIterator {
 		T&  operator*() const { return _p->value; }
 		T&  operator->() const { return &_p->value; }
 
-		rbtreeIterator&	iterate(int dir) {
+		rbtreeIterator&	iterate(bool dir) {
 			Node*	q = _p;
 		
 			if ((*_p)[dir]) {
@@ -320,6 +318,32 @@ class rbtree {
 
 	protected:
 
+		pair<iterator, bool>	insertAt(Node* p, const T& value) {
+			// Check if we are the correct subtree
+			if (p != root())
+				if (_comp(p->parent->value, value) != parentsSide(p))
+					return insertAt(p->parent, value);
+
+			if (_comp(value, p->value)) {
+				if (p->left)
+					return insertAt(p->left, value);
+				return make_pair(insertHere(p, LEFT, value), true);
+			}
+			if (_comp(p->value, value)) {
+				if (p->right)
+					return insertAt(p->right, value);
+				return make_pair(insertHere(p, RIGHT, value), true);
+			}
+			return make_pair(iterator(p), false);
+		}
+
+		iterator	insertHere(Node* parent, bool dir, const T& value) {
+			(*parent)[dir] = newNode(value, parent);
+			rebalanceInsertion(parent);
+			_size++;
+			return (*parent)[dir];
+		}
+	
 		// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html
 
 		// p is parent of newly inserted node
@@ -366,8 +390,7 @@ class rbtree {
 			// 4: sibling is red
 			// Swap siblings and parents color. Rotate parent towards p and recurse
 			if (isRed(sib)) {
-				p->parent->black = false;
-				sib->black = true;
+				std::swap(p->parent->black, sib->black);
 				rotate(p->parent, !parentsSide(sib));
 				rebalanceDeletion(p);
 				return ;
@@ -389,8 +412,7 @@ class rbtree {
 			// 5: siblings near child is red and far child is black
 			// Swap siblings and red childs color. Rotate sibling towards p and recurse
 			if (isBlack((*sib)[siblingSide]) && isRed((*sib)[!siblingSide])) {
-				sib->black = false;
-				(*sib)[!siblingSide]->black = true;
+				std::swap((*sib)[!siblingSide]->black, sib->black);
 				rotate(sib, siblingSide);
 				rebalanceDeletion(p);
 				return ;
@@ -403,33 +425,7 @@ class rbtree {
 			(*sib)[siblingSide]->black = true;
 		}
 	
-		pair<iterator, bool>	insertAt(Node* p, const T& value) {
-			// Check if we are the correct subtree
-			if (p != root())
-				if (_comp(p->parent->value, value) != parentsSide(p))
-					return insertAt(p->parent, value);
-
-			if (_comp(value, p->value)) {
-				if (p->left)
-					return insertAt(p->left, value);
-				return make_pair(insertHere(p, LEFT, value), true);
-			}
-			if (_comp(p->value, value)) {
-				if (p->right)
-					return insertAt(p->right, value);
-				return make_pair(insertHere(p, RIGHT, value), true);
-			}
-			return make_pair(iterator(p), false);
-		}
-
-		iterator	insertHere(Node* parent, int dir, const T& value) {
-			(*parent)[dir] = newNode(value, parent);
-			rebalanceInsertion(parent);
-			_size++;
-			return (*parent)[dir];
-		}
-	
-		void	rotate(Node* p, int dir) {
+		void	rotate(Node* p, bool dir) {
 			Node*	q = (*p)[!dir];
 
 			(*p)[!dir] =(*q)[dir];
@@ -467,7 +463,7 @@ class rbtree {
 			_alloc.deallocate(node, 1);
 		}
 	
-		// Necessary to keep iterators valid
+		// Necessary to keep iterator valid
 		void	swapNode(Node* lhs, Node* rhs) {
 			Node*	parent = lhs->parent;
 			Node*	left = lhs->left;
@@ -509,10 +505,10 @@ class rbtree {
 		Node*&	myChildRef(Node* node) const { return node->left ? node->left : node->right; }
 		Node*&	parentMyRef(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
 		
-		bool	isBlack(Node* node) const { return !node || node->black; }
 		bool	isRed(Node* node) const { return node && !node->black; }
+		bool	isBlack(Node* node) const { return !node || node->black; }
+		bool	parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
 		int		nbChildren(Node *node) const { return !!node->left + !!node->right; }
-		int		parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
 
 		NodeAllocator	_alloc;
 		Compare			_comp;

@@ -43,10 +43,10 @@ re: fclean
 run: all
 	./$(NAME)
 
-TESTFILES = vector.cpp
+TESTFILES = map.cpp
 
 test:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) && ./a.out && $(RM) a.out
+	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
 
 .PHONY = clean fclean re run test
 

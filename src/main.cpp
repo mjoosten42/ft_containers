@@ -1,15 +1,9 @@
-#include "meta.hpp"
-#include "vector.hpp"
+#include <cstdlib>
 
-#include <sstream>
-#include <iostream>
+#include "map.hpp"
 
 int	main() {
-	ft::vector<int>	v;
-	ft::vector<int>	w;
-	
-	v.resize(10);
-	w = v;
+	ft::map<int, std::string>	map;
 
-	std::cout << (v == w) << "\n";
+	std::cout << map.size() << "\n";
 }

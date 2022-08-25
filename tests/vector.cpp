@@ -15,7 +15,7 @@
 #include "myInt.hpp"
 #include "myAllocator.hpp"
 
-TEMPLATE_TEST_CASE( "vector", "", int, myInt ) {
+TEMPLATE_TEST_CASE( "vector", "[int][myInt]", int, myInt ) {
 	typedef ft::vector<TestType> 			Vec;
 	typedef	std::istream_iterator<TestType>	InputIt;
 

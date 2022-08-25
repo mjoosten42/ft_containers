@@ -3,6 +3,8 @@
 
 #include <memory.h> // std::allocator
 #include <functional> // std::less
+
+#include "rbtree.hpp"
 #include "pair.hpp"
 
 namespace ft
@@ -10,28 +12,19 @@ namespace ft
 
 template <	typename Key, typename T, typename Compare = std::less<Key>,
 			typename Allocator = std::allocator<std::pair<const Key, T> > >
-class map {
+class map: public rbtree<ft::pair<const Key, T>, Compare, Allocator> {
+
+		typedef rbtree<ft::pair<const Key, T>, Compare, Allocator>	base;
+
 	public:
+	
+		using base::empty;
 
-		// Typedefs
+		map(): base() {};
 
-		typedef Key								key_type;
-		typedef pair<const Key, T> 				mapped_type;
-		typedef std::size_t						value_type;
-		typedef std::ptrdiff_t 					difference_type;
-		typedef Compare							key_compare;
-		typedef Allocator 						allocator_type;
-		typedef value_type&						reference;
-		typedef const value_type& 				const_reference;
-		typedef typename Allocator::pointer		pointer;
-		typedef typename Allocator::const_pointer	const_pointer;
-		// typedef T*	iterator;
-		// typedef const T* const_iterator;
-		// typedef T*	reverse_iterator;
-		// typedef const T* const_reverse_iterator;
-
-	private:
-		Allocator	_allocator;
+		template <typename InputIt>
+		map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
+			: base(first, last, comp, alloc) {};
 };
 
 } // namespace ft
