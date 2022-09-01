@@ -13,7 +13,6 @@
 #include "myInt.hpp"
 #include "myAllocator.hpp"
 
-
 TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 	typedef ft::map<TestType, std::string>	Map;
 
@@ -37,10 +36,33 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 			REQUIRE( m.empty());
 		}
 
+		SECTION( "custom Compare") {
+
+		}
+	
 		SECTION( "InputIt") {
 			Map	m(array, array + size);
 
 			REQUIRE_FALSE( m.empty());
+			REQUIRE( m.size() == size);
+		}
+
+		SECTION( "copy constructor") {
+			Map	m(array, array + size);
+			Map	n(m);
+
+			REQUIRE( n.size() == m.size());
 		}
 	}
+
+	SECTION( "copy assignment" ) {
+		Map m(array, array + size);
+		Map n(array + 2, array + 5);
+
+		n = m;
+	
+		REQUIRE( n.size() == m.size());
+	}
+
+
 }

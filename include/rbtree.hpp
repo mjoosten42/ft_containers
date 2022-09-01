@@ -19,15 +19,19 @@ namespace ft
 #define LEFT false
 #define RIGHT true
 
+#define EQUAL 2
+
+enum Color { Red, Black };
+
 template <typename T>
 struct Node {
 	T		value;
 	Node*	parent;
 	Node*	left;
 	Node*	right;
-	bool	black;
+	Color	color;
 
-	Node(const T& value): value(value), left(NULL), right(NULL), black(false) {}
+	Node(const T& value): value(value), left(NULL), right(NULL), color(Red) {}
 
 	Node*&	operator[](bool dir) { return dir ? right : left; }
 
@@ -37,7 +41,7 @@ struct Node {
 		os << ", parent: "; node.parent ? os << node.parent->value : os << "-";
 		os << ", left: "; node.left ? os << node.left->value : os << "-";
 		os << ", right: "; node.right ? os << node.right->value : os << "-";
-		os << ", " << (node.black ? "black" : "red");
+		os << ", " << (node.color ? "black" : "red");
 		os << " }";
 		return os;
 	}
@@ -59,7 +63,7 @@ struct rbtreeIterator {
 		rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
 	
 		T&  operator*() const { return _p->value; }
-		T&  operator->() const { return &_p->value; }
+		T*  operator->() const { return &_p->value; }
 
 		rbtreeIterator&	iterate(bool dir) {
 			Node*	q = _p;
@@ -124,8 +128,10 @@ class rbtree {
 		explicit	rbtree(const Compare& comp, const Allocator& alloc = Allocator())
 			: _alloc(alloc), _comp(comp), _sentinel(newSentinel()), _size(0) {}
 
-		template <class InputIt>
-		explicit	rbtree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator())
+		template <typename InputIt>
+		explicit	rbtree(InputIt first, InputIt last,
+				const Compare& comp = Compare(),
+				const Allocator& alloc = Allocator())
 			: _alloc(alloc), _comp(comp), _sentinel(newSentinel()), _size(0) {
 				insert(first, last);
 			}
@@ -200,9 +206,9 @@ class rbtree {
 			std::swap(sentinel(), other.sentinel());
 		}
 
-		pair<iterator, bool>	insert(const T& value) {
+		ft::pair<iterator, bool>	insert(const T& value) {
 			if (empty())
-				return make_pair(insertHere(sentinel(), LEFT, value), true);
+				return ft::make_pair(insertHere(sentinel(), LEFT, value), true);
 			return insertAt(root(), value);
 		}
 
@@ -267,31 +273,30 @@ class rbtree {
 	
 		iterator	find(const T& value) {
 			Node*	p = root();
+			int		comp;
 		
 			while (p) {
-				if (_comp(value, p->value))
-					p = p->left;
-				else if (_comp(p->value, value))
-					p = p->right;
-				else
+				comp = compare(value, p->value);
+				if (comp == EQUAL)
 					return p;
+				p = (*p)[comp];
 			}
 			return end();
 		}
 		
-		pair<iterator, iterator>
-					equal_range(const T& value) { return make_pair(lower_bound(value), upper_bound(value)); }
+		ft::pair<iterator, iterator>
+					equal_range(const T& value) { return ft::make_pair(lower_bound(value), upper_bound(value)); }
 		iterator	lower_bound(const T& value) { return std::lower_bound(begin(), end(), value, _comp); }
 		iterator	upper_bound(const T& value) { return std::upper_bound(begin(), end(), value, _comp); }
 	
-		pair<const_iterator, const_iterator>
-						equal_range(const T& value) const { return make_pair(lower_bound(value), upper_bound(value)); }
+		ft::pair<const_iterator, const_iterator>
+						equal_range(const T& value) const { return ft::make_pair(lower_bound(value), upper_bound(value)); }
 		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
 		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
 		// TODO: remove
-#define RED "\033[0;31m"
-#define DEFAULT "\033[0m"
+#define COLOR_RED "\033[0;31m"
+#define COLOR_DEFAULT "\033[0m"
 #define SPACES 12
 
 		void	print() {
@@ -299,7 +304,7 @@ class rbtree {
 
 			printTree(root());
 			if (len)
-				std::cout << std::string((int)len, '-') << "\n";
+				std::cout << std::string(len, '-') << "\n";
 			else
 				std::cout << "--- empty ---\n";
 		}
@@ -312,29 +317,33 @@ class rbtree {
 			std::cout << "\n";
 			for (int i = SPACES; i < spaces; i++)
         		std::cout << " ";
-			std::cout << std::setw(2) << (node->black ? DEFAULT : RED) << node->value << DEFAULT << "\n";
+			std::cout << std::setw(2) << (node->color ? COLOR_DEFAULT : COLOR_RED) << node->value << COLOR_DEFAULT << "\n";
 			printTree(node->left, spaces);
 		}
 
 	protected:
 
-		pair<iterator, bool>	insertAt(Node* p, const T& value) {
+		int	compare(const T& value1, const T& value2) {
+			if (_comp(value1, value2))
+				return LEFT;
+			if (_comp(value2, value1))
+				return RIGHT;
+			return EQUAL;
+		};
+
+		ft::pair<iterator, bool>	insertAt(Node* p, const T& value) {		
 			// Check if we are the correct subtree
 			if (p != root())
-				if (_comp(p->parent->value, value) != parentsSide(p))
+				if (compare(value, p->parent->value) != parentsSide(p))
 					return insertAt(p->parent, value);
-
-			if (_comp(value, p->value)) {
-				if (p->left)
-					return insertAt(p->left, value);
-				return make_pair(insertHere(p, LEFT, value), true);
-			}
-			if (_comp(p->value, value)) {
-				if (p->right)
-					return insertAt(p->right, value);
-				return make_pair(insertHere(p, RIGHT, value), true);
-			}
-			return make_pair(iterator(p), false);
+				
+			int	comp = compare(value, p->value);
+			if (comp == EQUAL)
+				return ft::make_pair(iterator(p), false);
+			
+			if ((*p)[comp])
+				return insertAt((*p)[comp], value);
+			return ft::make_pair(insertHere(p, comp, value), true);
 		}
 
 		iterator	insertHere(Node* parent, bool dir, const T& value) {
@@ -348,17 +357,17 @@ class rbtree {
 
 		// p is parent of newly inserted node
 		void	rebalanceInsertion(Node *p) {
-			root()->black = true;
+			root()->color = Black;
 			if (p == sentinel() || isBlack(p))
 				return ;
 			
 			// 1: sibling is red
 			// Push parents blackness down and recurse for grandparent
 			Node* 	sib = sibling(p);
-			if (sib && isRed(sib)) {
-				sib->black = true;
-				p->black = true;
-				p->parent->black = false;
+			if (isRed(sib)) {
+				p->color = Black;
+				sib->color = Black;
+				p->parent->color = Red;
 				rebalanceInsertion(p->parent->parent);
 				return ;
 			}
@@ -366,8 +375,8 @@ class rbtree {
 			int	side = parentsSide(p);
 		
 			// 3: red nodes are unaligned
-			// Align by rotating this
-			if ((*p)[!side] && isRed((*p)[!side])) {
+			// Align by rotating p
+			if (isRed((*p)[!side])) {
 				rotate(p, side);
 				p = p->parent;
 			}
@@ -375,14 +384,14 @@ class rbtree {
 			// 2: red nodes are aligned
 			// Rotate black parent and swap colors
 			rotate(p->parent, !side);
-			(*p)[!side]->black = false;
-			p->black = true;
+			(*p)[!side]->color = Red;
+			p->color = Black;
 		}
 
 		// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 
 		void	rebalanceDeletion(Node* p) {
-			if (!p->black || p == root())
+			if (isRed(p) || p == root())
 				return ;
 
 			Node*	sib = sibling(p);
@@ -390,7 +399,8 @@ class rbtree {
 			// 4: sibling is red
 			// Swap siblings and parents color. Rotate parent towards p and recurse
 			if (isRed(sib)) {
-				std::swap(p->parent->black, sib->black);
+				sib->color = Black;
+				p->parent->color = Red;
 				rotate(p->parent, !parentsSide(sib));
 				rebalanceDeletion(p);
 				return ;
@@ -399,11 +409,11 @@ class rbtree {
 			// 3: sibling is black and has no red children
 			// Push blackness up and recurse
 			if (isBlack(sib->left) && isBlack(sib->right)) {
-				sib->black = false;
-				if (p->parent->black)
+				sib->color = Red;
+				if (p->parent->color == Black)
 					rebalanceDeletion(p->parent);
 				else
-					p->parent->black = true;
+					p->parent->color = Black;
 				return ;
 			}
 
@@ -412,7 +422,8 @@ class rbtree {
 			// 5: siblings near child is red and far child is black
 			// Swap siblings and red childs color. Rotate sibling towards p and recurse
 			if (isBlack((*sib)[siblingSide]) && isRed((*sib)[!siblingSide])) {
-				std::swap((*sib)[!siblingSide]->black, sib->black);
+				sib->color = Red;
+				(*sib)[!siblingSide]->color = Black;
 				rotate(sib, siblingSide);
 				rebalanceDeletion(p);
 				return ;
@@ -420,9 +431,9 @@ class rbtree {
 
 			// 6: sibling's far child is red
 			// Swap sibling and parents color. Rotate parent towards p. Color red child black
-			std::swap(p->parent->black, sib->black);
+			std::swap(p->parent->color, sib->color);
 			rotate(p->parent, !siblingSide);
-			(*sib)[siblingSide]->black = true;
+			(*sib)[siblingSide]->color = Black;
 		}
 	
 		void	rotate(Node* p, bool dir) {
@@ -469,7 +480,7 @@ class rbtree {
 			Node*	left = lhs->left;
 			Node*	right = rhs->right;
 
-			std::swap(lhs->black, rhs->black);
+			std::swap(lhs->color, rhs->color);
 			parentMyRef(lhs) = rhs;
 			if (lhs->left)
 				lhs->left->parent = rhs;
@@ -505,8 +516,8 @@ class rbtree {
 		Node*&	myChildRef(Node* node) const { return node->left ? node->left : node->right; }
 		Node*&	parentMyRef(Node* node) const { return node->parent->left == node ? node->parent->left : node->parent->right; }
 		
-		bool	isRed(Node* node) const { return node && !node->black; }
-		bool	isBlack(Node* node) const { return !node || node->black; }
+		bool	isRed(Node* node) const { return node && node->color == Red; }
+		bool	isBlack(Node* node) const { return !node || node->color == Black; }
 		bool	parentsSide(Node* node) const { return node->parent->left == node ? LEFT : RIGHT; }
 		int		nbChildren(Node *node) const { return !!node->left + !!node->right; }
 

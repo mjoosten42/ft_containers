@@ -1,6 +1,6 @@
 NAME := ft_containers
 CXX := c++
-CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD -std=c++98
+CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD#-std=c++98
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
