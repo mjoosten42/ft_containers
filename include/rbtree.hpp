@@ -5,6 +5,7 @@
 
 #include <functional> // std::less
 #include <memory> // std::allocator
+#include <algorithm> // std::lower/upper bound
 #include <iterator> // bidirectional_iterator_tag
 #include "iterator.hpp" // reverseIterator
 #include "pair.hpp"

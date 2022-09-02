@@ -14,11 +14,5 @@ jobs:
     - name: build
       run: make
 
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    
     - name: test
       run: make test
