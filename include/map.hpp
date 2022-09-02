@@ -36,13 +36,13 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 		typedef	ft::pair<const Key, T>	value_type;
 		typedef typename base::iterator	iterator;
 
-		map(): base() {};
+		map(): base() {}
 
 		template <typename InputIt>
 		map(InputIt first, InputIt last,
 				const Compare& comp = Compare(),
 				const Allocator& alloc = Allocator())
-			: base(first, last, mapCompare(comp), alloc) {};
+			: base(first, last, mapCompare(comp), alloc) {}
 };
 
 } // namespace ft

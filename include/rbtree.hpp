@@ -24,19 +24,19 @@ namespace ft
 enum Color { Red, Black };
 
 template <typename T>
-struct Node {
-	T		value;
-	Node*	parent;
-	Node*	left;
-	Node*	right;
-	Color	color;
+struct treeNode {
+	T			value;
+	treeNode*	parent;
+	treeNode*	left;
+	treeNode*	right;
+	Color		color;
 
-	Node(const T& value): value(value), left(NULL), right(NULL), color(Red) {}
+	treeNode(const T& value): value(value), left(NULL), right(NULL), color(Red) {}
 
-	Node*&	operator[](bool dir) { return dir ? right : left; }
+	treeNode*&	operator[](bool dir) { return dir ? right : left; }
 
 	// TODO: remove
-	friend std::ostream&	operator<<(std::ostream& os, const Node& node) {
+	friend std::ostream&	operator<<(std::ostream& os, const treeNode& node) {
 		os << "{ " << node.value;
 		os << ", parent: "; node.parent ? os << node.parent->value : os << "-";
 		os << ", left: "; node.left ? os << node.left->value : os << "-";
@@ -49,7 +49,7 @@ struct Node {
 
 template <typename T>
 struct rbtreeIterator {
-		typedef Node<T>	Node;
+		typedef treeNode<T>						Node;
 	public:
 		typedef std::bidirectional_iterator_tag	iterator_category;
 		typedef T								value_type;
@@ -102,7 +102,7 @@ template <typename T, typename Compare = std::less<T>, typename Allocator = std:
 class rbtree {
 	protected:
 
-		typedef Node<T>												Node;
+		typedef treeNode<T>											Node;
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:

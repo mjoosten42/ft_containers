@@ -37,12 +37,12 @@ class reverseIterator {
 		typedef typename iterator_traits<Iterator>::pointer				pointer;
 		typedef typename iterator_traits<Iterator>::reference			reference;
 
-		reverseIterator(): current() {};
+		reverseIterator(): current() {}
 	
-		explicit	reverseIterator(Iterator it): current(it) {};
+		explicit	reverseIterator(Iterator it): current(it) {}
 
 		template <typename U>
-		reverseIterator(const reverseIterator<U>& other): current(other.base()) {};
+		reverseIterator(const reverseIterator<U>& other): current(other.base()) {}
 
 		template <typename U>
 		reverseIterator&	operator=(const reverseIterator<U>& rhs) {
