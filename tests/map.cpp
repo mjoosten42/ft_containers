@@ -16,7 +16,7 @@
 TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 	typedef ft::map<TestType, std::string>	Map;
 
-	ft::pair<TestType, std::string>	array[] = {
+	const ft::pair<TestType, std::string>	array[] = {
 		{ 8,  "h" },
 		{ 3,  "c" },
 		{ 1,  "a" },
@@ -27,7 +27,7 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		{ 14, "n" },
 		{ 13, "m" }
 	};
-	uint	size = sizeof(array) / sizeof(array[0]);
+	const uint	size = sizeof(array) / sizeof(array[0]);
 
 	SECTION( "constructors") {
 		SECTION( "default") {
@@ -62,7 +62,9 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		n = m;
 	
 		REQUIRE( n.size() == m.size());
+		std::cout << __LINE__ << "\n";
 	}
+		std::cout << __LINE__ << "\n";
 
 
 }

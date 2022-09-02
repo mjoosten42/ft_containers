@@ -5,7 +5,7 @@
 #include <set>
 #include <sstream>
 
-#if 0
+#if 1
 	#include <vector>
 	namespace ft = std;
 #else
@@ -24,6 +24,7 @@ TEMPLATE_TEST_CASE( "vector", "[int][myInt]", int, myInt ) {
 	const std::set<TestType>		set = { 4, 5, 6 };
 	std::istringstream				iss("7 8 9");
 
+	REQUIRE(myit == sysit);
 	SECTION( "constructors ") {
 		SECTION( "default " ) {
 			Vec v;

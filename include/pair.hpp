@@ -29,7 +29,6 @@ struct pair {
 	friend bool	operator> (const pair& lhs, const pair& rhs) { return rhs <  lhs; }
 	friend bool	operator>=(const pair& lhs, const pair& rhs) { return rhs <= lhs; }
 
-
 	T1	first;
 	T2	second;
 };
