@@ -30,6 +30,5 @@ int	main() {
 
 	n = map;
 
-	std::cout << map.size() << "\n";
-	std::cout << n.size() << "\n";
+	//std::cout << (n == map) << "\n";
 }

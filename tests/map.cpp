@@ -58,9 +58,13 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 	SECTION( "copy assignment" ) {
 		Map m(array, array + size);
 		Map n(array + 2, array + 5);
+		Map	o;
 
 		n = m;
+		o = n;
 	
 		REQUIRE( n.size() == m.size());
+
+		REQUIRE (o.size)
 	}
 }

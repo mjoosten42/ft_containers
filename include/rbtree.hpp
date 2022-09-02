@@ -9,6 +9,7 @@
 #include <iterator> // bidirectional_iterator_tag
 #include "iterator.hpp" // reverseIterator
 #include "pair.hpp"
+#include "meta.hpp" // equal
 
 #include <iostream> // TODO: remove
 #include <iomanip> // TODO: remove
@@ -189,6 +190,7 @@ class rbtree {
 		reverse_iterator	rbegin() { return end(); }
 		reverse_iterator	rend() { return begin(); }
 
+
 		// Capacity
 
 		bool		empty() const { return size() == 0; }
@@ -323,6 +325,10 @@ class rbtree {
 			std::cout << std::setw(2) << (node->color ? COLOR_DEFAULT : COLOR_RED) << node->value << COLOR_DEFAULT << "\n";
 			printTree(node->left, spaces);
 		}
+
+		// friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
+		// 	return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin(), Compare()); 
+		// }
 
 	protected:
 
