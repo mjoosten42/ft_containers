@@ -60,7 +60,7 @@ struct rbtreeIterator {
 		typedef T&								reference;
 	
 		rbtreeIterator() {};
-		rbtreeIterator(Node *p): _p(p) {}
+		explicit rbtreeIterator(Node *p): _p(p) {}
 		rbtreeIterator(const rbtreeIterator& rhs): _p(rhs._p) {};
 		rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
 	
@@ -183,13 +183,24 @@ class rbtree {
 
 			while (p->left)
 				p = p->left;
-			return p;
+			return iterator(p);
 		}
 
-		iterator			end() { return sentinel(); }
-		reverse_iterator	rbegin() { return end(); }
-		reverse_iterator	rend() { return begin(); }
+		iterator			end() { return iterator(_sentinel); }
+		reverse_iterator	rbegin() { return reverse_iterator(end()); }
+		reverse_iterator	rend() { return reverse_iterator(begin()); }
 
+		const_iterator	begin() const {
+			const Node*	p = _sentinel;
+
+			while (p->left)
+				p = p->left;
+			return const_iterator(p);
+		}
+
+		const_iterator			end() const { return const_iterator(_sentinel); }
+		const_reverse_iterator	rbegin() const { return const_reverse_iterator(end()); }
+		const_reverse_iterator	rend() const { return const_reverse_iterator(begin()); }
 
 		// Capacity
 
@@ -326,9 +337,9 @@ class rbtree {
 			printTree(node->left, spaces);
 		}
 
-		// friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
-		// 	return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin(), Compare()); 
-		// }
+		friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
+			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin(), Compare()); 
+		}
 
 	protected:
 
@@ -349,7 +360,6 @@ class rbtree {
 			int	comp = compare(value, p->value);
 			if (comp == EQUAL)
 				return ft::make_pair(iterator(p), false);
-			
 			if ((*p)[comp])
 				return insertAt((*p)[comp], value);
 			return ft::make_pair(insertHere(p, comp, value), true);
@@ -359,7 +369,7 @@ class rbtree {
 			(*parent)[dir] = newNode(value, parent);
 			rebalanceInsertion(parent);
 			_size++;
-			return (*parent)[dir];
+			return iterator((*parent)[dir]);
 		}
 	
 		// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html

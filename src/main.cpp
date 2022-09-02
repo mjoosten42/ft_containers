@@ -23,6 +23,7 @@ int	main() {
 		{ 14, "n" },
 		{ 13, "m" }
 	};
+
 	const uint	size = sizeof(array) / sizeof(array[0]);
 
 	Map	map(array, array + size);
@@ -30,5 +31,5 @@ int	main() {
 
 	n = map;
 
-	//std::cout << (n == map) << "\n";
+	std::cout << (n == map) << "\n";
 }
