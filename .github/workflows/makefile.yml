@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Catch2
 
 on:
   push:
@@ -12,8 +12,5 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: configure
-      run: ./configure
-      
     - name: Test
       run: make test
