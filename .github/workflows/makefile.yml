@@ -1,18 +1,24 @@
 name: Catch2
 
 on:
-  push:
-    branches: [ "master" ]
+	push:
+		branches: [ "master" ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+	build:
+		runs-on: ubuntu-latest
+		steps:
+		- uses: actions/checkout@v3
+		- name: build
+			run: make
 
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: build
-      run: make
-
-    - name: test
-      run: make test
+	test:
+		needs: build
+		runs-on: ubuntu-latest
+		steps:
+		- uses: actions/checkout@v3
+		- name: build
+			run: make
+		- name: test
+			run: make build
+			run: make test

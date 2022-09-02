@@ -45,8 +45,11 @@ run: all
 
 TESTFILES = map.cpp
 
+build:
+	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2
+
 test:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
+	./catch2
 
 .PHONY = clean fclean re run test
 
