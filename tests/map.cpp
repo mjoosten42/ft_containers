@@ -64,7 +64,5 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		o = n;
 	
 		REQUIRE( n.size() == m.size());
-
-		REQUIRE (o.size)
 	}
 }
