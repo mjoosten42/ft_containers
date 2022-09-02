@@ -59,8 +59,8 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		Map m(array, array + size);
 		Map n(array + 2, array + 5);
 
-		// n = m;
+		n = m;
 	
-		// REQUIRE( n.size() == m.size());
+		REQUIRE( n.size() == m.size());
 	}
 }

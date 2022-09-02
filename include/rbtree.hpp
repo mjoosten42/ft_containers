@@ -143,8 +143,10 @@ class rbtree {
 		};
 
 		rbtree&	operator=(const rbtree& rhs) {
-			if (sentinel())
-				destroySubtree(sentinel());
+			if (sentinel()) {
+				destroySubtree(root());
+				_alloc.deallocate(sentinel(), 1);
+			}
 			_alloc = rhs.get_allocator();
 			_comp = rhs._comp; // value_comp()?
 			_sentinel = newNode(T(), NULL);
