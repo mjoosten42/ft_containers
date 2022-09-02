@@ -9,6 +9,8 @@
 	#include "map.hpp"
 #endif
 
+#include "rbtree.hpp"
+
 typedef ft::map<myInt, std::string>	Map;
 
 int	main() {
@@ -24,12 +26,10 @@ int	main() {
 		{ 13, "m" }
 	};
 
-	const uint	size = sizeof(array) / sizeof(array[0]);
+	const uint	size = sizeof(array) / sizeof(array[0]); (void)size;
 
-	Map	map(array, array + size);
-	Map n(array + 2, array + 5);
+	ft::rbtree<int>	m;
+	ft::rbtree<int>	n;
 
-	n = map;
-
-	std::cout << (n == map) << "\n";
+	std::cout << (m == n) << "\n";
 }
