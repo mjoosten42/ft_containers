@@ -222,9 +222,9 @@ class vector {
 		}
 	
 		friend bool	operator!=(const vector& lhs, const vector& rhs) { return !(lhs == rhs); }
-		friend bool	operator<=(const vector& lhs, const vector& rhs) { return lhs < rhs || lhs == rhs;	}
-		friend bool	operator> (const vector& lhs, const vector& rhs) { return rhs < lhs; }
-		friend bool	operator>=(const vector& lhs, const vector& rhs) { return rhs <= lhs; }
+		friend bool	operator> (const vector& lhs, const vector& rhs) { return   rhs <  lhs ; }
+		friend bool	operator<=(const vector& lhs, const vector& rhs) { return !(lhs >  rhs); }
+		friend bool	operator>=(const vector& lhs, const vector& rhs) { return !(lhs <  rhs); }
 
 	private:
 

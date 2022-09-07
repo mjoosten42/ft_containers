@@ -11,10 +11,6 @@
 #include "pair.hpp"
 #include "meta.hpp" // equal
 
-#include <iostream> // TODO: remove
-#include <iomanip> // TODO: remove
-#include <cmath>  // TODO: remove
-
 namespace ft
 {
 
@@ -25,86 +21,71 @@ namespace ft
 
 enum Color { Red, Black };
 
-template <typename T>
-struct treeNode {
-	T			value;
-	treeNode*	parent;
-	treeNode*	left;
-	treeNode*	right;
-	Color		color;
-
-	treeNode(const T& value): value(value), left(NULL), right(NULL), color(Red) {}
-
-	treeNode*&	operator[](bool dir) { return dir ? right : left; }
-
-	// TODO: remove
-	friend std::ostream&	operator<<(std::ostream& os, const treeNode& node) {
-		os << "{ " << node.value;
-		os << ", parent: "; node.parent ? os << node.parent->value : os << "-";
-		os << ", left: "; node.left ? os << node.left->value : os << "-";
-		os << ", right: "; node.right ? os << node.right->value : os << "-";
-		os << ", " << (node.color ? "black" : "red");
-		os << " }";
-		return os;
-	}
-};
-
-template <typename T>
-struct rbtreeIterator {
-		typedef treeNode<T>						Node;
-	public:
-		typedef std::bidirectional_iterator_tag	iterator_category;
-		typedef T								value_type;
-		typedef std::ptrdiff_t					difference_type;
-		typedef T*								pointer;
-		typedef T&								reference;
-	
-		rbtreeIterator() {};
-		explicit rbtreeIterator(Node *p): _p(p) {}
-		rbtreeIterator(const rbtreeIterator& rhs): _p(rhs._p) {};
-		rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
-	
-		T&  operator*() const { return _p->value; }
-		T*  operator->() const { return &_p->value; }
-
-		rbtreeIterator&	iterate(bool dir) {
-			Node*	q = _p;
-		
-			if ((*_p)[dir]) {
-				_p = (*_p)[dir];
-				while ((*_p)[!dir])
-					_p = (*_p)[!dir];
-			}
-			else {
-				_p = _p->parent;
-				while (q == (*_p)[dir]) {
-					q = _p;
-					_p = _p->parent;
-				}
-			}
-			return *this;
-		}
-		rbtreeIterator&	operator++() { return iterate(RIGHT); }
-		rbtreeIterator&	operator--() { return iterate(LEFT); }
-
-		rbtreeIterator	operator++(int) { rbtreeIterator tmp (*this); ++*this; return tmp; }
-		rbtreeIterator	operator--(int) { rbtreeIterator tmp (*this); --*this; return tmp; }
-
-		bool	operator==(const rbtreeIterator& rhs) { return _p == rhs._p; }
-		bool	operator!=(const rbtreeIterator& rhs) { return _p != rhs._p; }
-
-		// Implicit conversion
-		operator Node*() const { return _p; }
-
-	private:
-		Node*	_p;
-};
-
 template <typename T, typename Compare = std::less<T>, typename Allocator = std::allocator<T> >
 class rbtree {
 	protected:
+		struct Node {
+			T		value;
+			Node*	parent;
+			Node*	left;
+			Node*	right;
+			Color	color;
 
-		typedef treeNode<T>											Node;
+			Node(const T& value): value(value), left(NULL), right(NULL), color(Red) {}
+
+			Node*& 		operator[](bool dir) { return dir ? right : left; }
+			Node*const&	operator[](bool dir) const { return dir ? right : left; }
+		};
+
+		struct rbtreeIterator {
+			typedef std::bidirectional_iterator_tag	iterator_category;
+			typedef T								value_type;
+			typedef std::ptrdiff_t					difference_type;
+			typedef T*								pointer;
+			typedef T&								reference;
+
+			rbtreeIterator() {};
+			explicit rbtreeIterator(Node *p): _p(p) {}
+			rbtreeIterator(const rbtreeIterator& rhs): _p(rhs._p) {};
+			rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
+		
+			reference 	operator* () const { return _p->value; }
+			pointer		operator->() const { return &_p->value; }
+
+			rbtreeIterator&	iterate(bool dir) {
+				Node*	q = _p;
+			
+				if ((*_p)[dir]) {
+					_p = (*_p)[dir];
+					while ((*_p)[!dir])
+						_p = (*_p)[!dir];
+				}
+				else {
+					_p = _p->parent;
+					while (q == (*_p)[dir]) {
+						q = _p;
+						_p = _p->parent;
+					}
+				}
+				return *this;
+			}
+
+			rbtreeIterator&	operator++() { return iterate(RIGHT); }
+			rbtreeIterator&	operator--() { return iterate(LEFT); }
+
+			rbtreeIterator	operator++(int) { rbtreeIterator tmp (*this); ++*this; return tmp; }
+			rbtreeIterator	operator--(int) { rbtreeIterator tmp (*this); --*this; return tmp; }
+
+			bool	operator==(const rbtreeIterator& rhs) { return _p == rhs._p; }
+			bool	operator!=(const rbtreeIterator& rhs) { return _p != rhs._p; }
+
+			// Implicit conversion
+			operator Node*() const { return _p; }
+
+			private:
+				Node*	_p;
+		};
+
 		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:
@@ -113,17 +94,18 @@ class rbtree {
 
 		typedef std::size_t							size_type;
 		typedef std::ptrdiff_t						difference_type;
-		typedef Compare								key_compare;
 		typedef Allocator							allocator_type;
 		typedef T&									reference;
 		typedef const T&							const_reference;
 		typedef typename Allocator::pointer			pointer;
 		typedef typename Allocator::const_pointer	const_pointer;
-		typedef rbtreeIterator<T>					iterator;
-		typedef rbtreeIterator<const T>				const_iterator;
+		typedef rbtreeIterator						iterator;
+		typedef rbtreeIterator						const_iterator;
 		typedef reverseIterator<iterator>			reverse_iterator;
 		typedef reverseIterator<const_iterator>		const_reverse_iterator;
-		
+
+		// Constructors
+
 		rbtree(): _alloc(), _comp(), _sentinel(newSentinel()), _size(0) {}
 		rbtree(const rbtree& rhs): _sentinel(NULL) { *this = rhs; }
 
@@ -140,19 +122,19 @@ class rbtree {
 
 		~rbtree() {
 			destroySubtree(root());
-			_alloc.deallocate(sentinel(), 1);
+			_alloc.deallocate(_sentinel, 1);
 		};
 
 		rbtree&	operator=(const rbtree& rhs) {
-			if (sentinel()) {
+			if (_sentinel) {
 				destroySubtree(root());
-				_alloc.deallocate(sentinel(), 1);
+				_alloc.deallocate(_sentinel, 1);
 			}
 			_alloc = rhs.get_allocator();
 			_comp = rhs._comp; // value_comp()?
-			_sentinel = newNode(T(), NULL);
+			_sentinel = newSentinel();
 			_size = 0;
-			insert((const_cast<rbtree&>(rhs)).begin(), (const_cast<rbtree&>(rhs)).end()); // TODO
+			insert(rhs.begin(), rhs.end());
 			return *this;
 		}
 
@@ -168,18 +150,10 @@ class rbtree {
 			return *it;
 		}
 	
-		T&	operator[](const T& value) {
-			iterator it = find(value);
-
-			if (it == end())
-				return *insert(T()).first;
-			return *it;
-		}
-
 		// Iterators
 
 		iterator	begin() {
-			Node*	p = sentinel();
+			Node*	p = _sentinel;
 
 			while (p->left)
 				p = p->left;
@@ -191,7 +165,7 @@ class rbtree {
 		reverse_iterator	rend() { return reverse_iterator(begin()); }
 
 		const_iterator	begin() const {
-			const Node*	p = _sentinel;
+			Node*	p = _sentinel;
 
 			while (p->left)
 				p = p->left;
@@ -219,12 +193,13 @@ class rbtree {
 		void	swap(rbtree& other) {
 			std::swap(_alloc, other._alloc);
 			std::swap(_comp, other._comp);
-			std::swap(sentinel(), other.sentinel());
+			std::swap(_sentinel, other._sentinel);
+			std::swap(_size, other._size);
 		}
 
 		ft::pair<iterator, bool>	insert(const T& value) {
 			if (empty())
-				return ft::make_pair(insertHere(sentinel(), LEFT, value), true);
+				return ft::make_pair(insertHere(_sentinel, LEFT, value), true);
 			return insertAt(root(), value);
 		}
 
@@ -255,7 +230,7 @@ class rbtree {
 			case 2:
 				q = ++iterator(p);
 				swapNode(p, q);
-				return erase(p);
+				return erase(iterator(p));
 			}
 			deleteNode(p);
 			_size--;
@@ -270,31 +245,17 @@ class rbtree {
 				erase(--it);
 			}
 		}
-	
-		size_type	erase(const T& value) {			
-			iterator it = find(value);
-
-			if (it == end())
-				return 0;
-			erase(it);
-			return 1;
-		}
 
 		// Lookup
 
-		// Map and set store unique keys, so at most 1 element
-		size_type	count(const T& value) const {
-			return find(value) != end();
-		}
-	
-		iterator	find(const T& value) {
+		iterator	find(const T& value) const {
 			Node*	p = root();
 			int		comp;
 		
 			while (p) {
 				comp = compare(value, p->value);
 				if (comp == EQUAL)
-					return p;
+					return iterator(p);
 				p = (*p)[comp];
 			}
 			return end();
@@ -310,40 +271,22 @@ class rbtree {
 		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
 		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
-		// TODO: remove
-#define COLOR_RED "\033[0;31m"
-#define COLOR_DEFAULT "\033[0m"
-#define SPACES 12
-
-		void	print() {
-			int len = SPACES * M_SQRT2 * std::log2(size() + 1);
-
-			printTree(root());
-			if (len)
-				std::cout << std::string(len, '-') << "\n";
-			else
-				std::cout << "--- empty ---\n";
-		}
-
-		void	printTree(Node *node, int spaces = 0) const {
-			if (!node)
-				return ;
-			spaces += SPACES;
-			printTree(node->right, spaces);
-			std::cout << "\n";
-			for (int i = SPACES; i < spaces; i++)
-        		std::cout << " ";
-			std::cout << std::setw(2) << (node->color ? COLOR_DEFAULT : COLOR_RED) << node->value << COLOR_DEFAULT << "\n";
-			printTree(node->left, spaces);
-		}
-
 		friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
-			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin(), Compare()); 
+			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin()); 
 		}
+
+		friend bool operator< (const rbtree& lhs, const rbtree& rhs) {
+			return lhs.size() < rhs.size() || ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+		}
+
+		friend bool operator!=(const rbtree& lhs, const rbtree& rhs) { return !(lhs == rhs); }
+		friend bool operator> (const rbtree& lhs, const rbtree& rhs) { return   rhs <  lhs ; }
+		friend bool operator<=(const rbtree& lhs, const rbtree& rhs) { return !(lhs >  rhs); }
+		friend bool operator>=(const rbtree& lhs, const rbtree& rhs) { return !(lhs <  rhs); }
 
 	protected:
 
-		int	compare(const T& value1, const T& value2) {
+		int	compare(const T& value1, const T& value2) const {
 			if (_comp(value1, value2))
 				return LEFT;
 			if (_comp(value2, value1))
@@ -377,7 +320,7 @@ class rbtree {
 		// p is parent of newly inserted node
 		void	rebalanceInsertion(Node *p) {
 			root()->color = Black;
-			if (p == sentinel() || isBlack(p))
+			if (p == _sentinel || isBlack(p))
 				return ;
 			
 			// 1: sibling is red
@@ -468,9 +411,8 @@ class rbtree {
 			p->parent = q;
 		}
 
-		Node*&	sentinel() { return _sentinel; }
-		Node*&	root() { return sentinel()->left; }
-
+		Node*&		root() { return _sentinel->left; }
+		Node*const&	root() const { return _sentinel->left; }
 
 		Node*	newSentinel() {
 			Node*	tmp = _alloc.allocate(1);

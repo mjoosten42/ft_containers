@@ -53,7 +53,7 @@ class reverseIterator {
 		Iterator	base() const { return current; }
 
 		reference	operator*() const { Iterator it = current; return *--it; }
-		reference	operator->() const { return &operator*(); }
+		pointer		operator->() const { return &operator*(); }
 
 		reference	operator[](difference_type n) const { Iterator it = current; return *(it - n - 1); }
 	

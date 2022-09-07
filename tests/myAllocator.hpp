@@ -21,13 +21,15 @@ class myAllocator {
 		template <typename U>
 		myAllocator(const myAllocator<U>& other): mMaxSize(other.max_size()) {}
 
-		pointer	allocate(size_type n) { return malloc(n * sizeof(T)); }
+		pointer	allocate(size_type n) { return static_cast<pointer>(malloc(n * sizeof(T))); }
 		void	deallocate(pointer p, size_type n) { free(p); (void)n; }
 		void	construct(pointer p, const T& value) { new (p) T(value); }
 		void	destroy(pointer p) { p->~T(); }
 
+		template <class U>
+		struct rebind { typedef myAllocator<U> other; };
+
 		size_type	max_size() const { return mMaxSize; }
-		void		set_size(size_type size) { mMaxSize = size; }
 
 		friend bool operator==(const myAllocator&, const myAllocator&) { return true; }
 		friend bool operator!=(const myAllocator&, const myAllocator&) { return false; }

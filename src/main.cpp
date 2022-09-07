@@ -1,7 +1,3 @@
-#include <string>
-#include <iostream>
-#include "../tests/myInt.hpp"
-
 #if 0
 	#include <map>
 	namespace ft = std;
@@ -9,11 +5,14 @@
 	#include "map.hpp"
 #endif
 
-#include "rbtree.hpp"
+#include <string>
+#include "../tests/myInt.hpp"
+#include "../tests/myAllocator.hpp"
 
 typedef ft::map<myInt, std::string>	Map;
 
 int	main() {
+	std::cout << std::boolalpha;
 	const ft::pair<myInt, std::string>	array[] = {
 		{ 8,  "h" },
 		{ 3,  "c" },
@@ -25,11 +24,9 @@ int	main() {
 		{ 14, "n" },
 		{ 13, "m" }
 	};
+	const uint	size = sizeof(array) / sizeof(array[0]);
 
-	const uint	size = sizeof(array) / sizeof(array[0]); (void)size;
+	Map	m(array, array + size);
 
-	ft::rbtree<int>	m;
-	ft::rbtree<int>	n;
-
-	std::cout << (m == n) << "\n";
+	m.print();
 }

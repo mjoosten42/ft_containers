@@ -35,3 +35,4 @@
 include/catch2.hpp
 include/myInt.hpp
 include/myAllocator.hpp
+catch2
