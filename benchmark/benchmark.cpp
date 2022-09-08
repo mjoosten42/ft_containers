@@ -18,7 +18,7 @@
 #include <string>
 
 
-#define COUNT 1 << 8
+#define COUNT 1 << 16
 
 TEST_CASE( "vector", "[vector]") {
 	ft::vector<std::string>	v;

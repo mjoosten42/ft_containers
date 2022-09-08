@@ -5,10 +5,10 @@ CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD -std=c++98
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
 
-#ifdef DEBUG
+ifdef DEBUG
 	CXXFLAGS += -g -fsanitize=address
 	LDFLAGS += -g -fsanitize=address
-#endif
+endif
 
 INC = -I include
 
@@ -49,8 +49,8 @@ test:
 	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
 
 bm:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD -o bm && ./bm
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -o bm && ./bm
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD && ./a.out
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) && ./a.out
 
 .PHONY = clean fclean re run test bm
 
