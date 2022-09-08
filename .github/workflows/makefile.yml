@@ -25,3 +25,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=set.cpp
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: make bm

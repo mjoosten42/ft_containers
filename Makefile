@@ -1,6 +1,6 @@
 NAME := ft_containers
 CXX := c++
-CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD #-std=c++98
+CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD -std=c++98
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
@@ -43,12 +43,15 @@ re: fclean
 run: all
 	./$(NAME)
 
-TESTFILES := set.cpp
+TESTFILES := vector.cpp
 
 test:
 	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
 
+bm:
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD && ./a.out
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) && ./a.out
 
-.PHONY = clean fclean re run test
+.PHONY = clean fclean re run test bm
 
 -include $(DEP)

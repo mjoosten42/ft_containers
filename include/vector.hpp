@@ -198,10 +198,10 @@ class vector {
 
 		void	resize(size_type n, T value = T()) {
 			reserve(n);
-			if (size() < n)
-				insert(end(), n - size(), value);
-			if (size() > n)
-				erase(begin() + n, end());
+			while (size() < n)
+				push_back(value);
+			while (size() > n)
+				pop_back();
 		}
 
 		void	swap(vector& other) {
