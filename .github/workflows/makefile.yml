@@ -10,24 +10,26 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=vector.cpp
+    - run: make bm
+    - run: ./bm vector
   stack:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=stack.cpp
+    - run: make bm
+    - run: ./bm stack
   map:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=map.cpp
+    - run: make bm
+    - run: ./bm map
   set:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=set.cpp
-  benchmark:
-    needs: [vector, stack, map, set]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
     - run: make bm
+    - run: ./bm set

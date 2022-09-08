@@ -197,7 +197,8 @@ class vector {
 		}
 
 		void	resize(size_type n, T value = T()) {
-			reserve(n);
+			if (n > 2 * size())
+				reserve(n);
 			while (size() < n)
 				push_back(value);
 			while (size() > n)
