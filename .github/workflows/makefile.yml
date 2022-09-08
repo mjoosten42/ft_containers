@@ -26,6 +26,7 @@ jobs:
     - uses: actions/checkout@v3
     - run: make test TESTFILES=set.cpp
   benchmark:
+    needs: [vector, stack, map, set]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
