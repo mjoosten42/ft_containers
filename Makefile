@@ -6,8 +6,8 @@ CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
 
 #ifdef DEBUG
-	CXXFLAGS += -g -fsanitize=undefined
-	LDFLAGS += -g -fsanitize=undefined
+	CXXFLAGS += -g -fsanitize=address
+	LDFLAGS += -g -fsanitize=address
 #endif
 
 INC = -I include
@@ -43,7 +43,7 @@ re: fclean
 run: all
 	./$(NAME)
 
-TESTFILES = map.cpp
+TESTFILES = stack.cpp
 
 test:
 	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2

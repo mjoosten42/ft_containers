@@ -28,5 +28,4 @@ int	main() {
 
 	Map	m(array, array + size);
 
-	m.print();
 }

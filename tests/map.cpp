@@ -239,6 +239,13 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 			REQUIRE( m.erase(1) == 0);
 			m[1] = "A";
 			REQUIRE( m.erase(1) == 1);
+
+			m[2] = "B";
+			m[1] = "A";
+			m[3] = "C";
+			Iter it = m.find(3);
+			m.erase(2);
+			REQUIRE( it->second == "C");
 		}
 
 		SECTION( "swap" ) {

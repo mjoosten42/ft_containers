@@ -24,6 +24,10 @@ TEMPLATE_TEST_CASE( "vector", "[int][myInt]", int, myInt ) {
 	const std::set<TestType>		set = { 4, 5, 6 };
 	std::istringstream				iss("7 8 9");
 
+	SECTION( "typedefs" ) { // TODO
+		static_assert(std::is_same<typename Vec::value_type, TestType>::value, "value_type");
+	}
+
 	SECTION( "constructors ") {
 		SECTION( "default " ) {
 			Vec v;
