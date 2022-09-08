@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
+#include <memory>
 #include <array>
 #include <set>
 #include <sstream>
@@ -24,8 +25,16 @@ TEMPLATE_TEST_CASE( "vector", "[int][myInt]", int, myInt ) {
 	const std::set<TestType>		set = { 4, 5, 6 };
 	std::istringstream				iss("7 8 9");
 
-	SECTION( "typedefs" ) { // TODO
+	SECTION( "typedefs" ) {
 		static_assert(std::is_same<typename Vec::value_type, TestType>::value, "value_type");
+		static_assert(std::is_same<typename Vec::allocator_type, std::allocator<TestType> >::value, "allocator_type");
+		static_assert(std::is_same<typename ft::vector<TestType, myAllocator<TestType> >::allocator_type, myAllocator<TestType> >::value, "allocator_type");
+		static_assert(std::is_unsigned<typename Vec::size_type>::value, "size_type");
+		static_assert(std::is_signed<typename Vec::difference_type>::value, "value_type");
+		static_assert(std::is_same<typename Vec::reference, TestType&>::value, "reference");
+		static_assert(std::is_same<typename Vec::const_reference, const TestType&>::value, "const_reference");
+		static_assert(std::is_same<typename Vec::pointer, TestType*>::value, "pointer");
+		static_assert(std::is_same<typename Vec::const_pointer, const TestType*>::value, "const_pointer");
 	}
 
 	SECTION( "constructors ") {

@@ -40,7 +40,6 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 
 		using typename base::size_type;
 		using typename base::iterator;
-		using base::end;
 		using base::erase;
 
 		map(): base() {}
@@ -54,29 +53,23 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 			: base(first, last, value_compare(comp), alloc) {}
 
 		T&	at(const Key& key) {
-			try {
-				return base::at(ft::make_pair(key, T())).second;
-			}
-			catch(const std::exception& e) {
+			iterator it = base::find(ft::make_pair(key, T()));
+
+			if (it == base::end())
 				throw std::out_of_range("map");
-			}
+			return it->second;
 		}
 
 		T&	operator[](const Key& key) {
 			iterator it = base::find(ft::make_pair(key, T()));
 
-			if (it == end())
+			if (it == base::end())
 				return base::insert(ft::make_pair(key, T())).first->second;
 			return it->second;	
 		}
 
 		size_type	erase(const Key& key) {
-			iterator it = base::find(ft::make_pair(key, T()));
-
-			if (it == end())
-				return 0;
-			erase(it);
-			return 1;
+			return base::erase(ft::make_pair(key, T()));
 		}
 
 		iterator	find(const Key& key) const {
@@ -84,7 +77,7 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 		}
 
 		size_type	count(const Key& key) const {
-			return base::find(ft::make_pair(key, T())) != end();
+			return base::count(ft::make_pair(key, T()));
 		}
 
 		ft::pair<iterator, iterator>	equal_range(const Key& key) const {

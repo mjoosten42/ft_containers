@@ -49,7 +49,7 @@ class rbtree {
 			rbtreeIterator(const rbtreeIterator& rhs): _p(rhs._p) {};
 			rbtreeIterator&	operator=(const rbtreeIterator& rhs) { _p = rhs._p; return *this; }
 		
-			reference 	operator* () const { return _p->value; }
+			reference	operator*() const { return _p->value; }
 			pointer		operator->() const { return &_p->value; }
 
 			rbtreeIterator&	iterate(bool dir) {
@@ -97,8 +97,8 @@ class rbtree {
 		typedef Allocator							allocator_type;
 		typedef T&									reference;
 		typedef const T&							const_reference;
-		typedef typename Allocator::pointer			pointer;
-		typedef typename Allocator::const_pointer	const_pointer;
+		typedef T*									pointer;
+		typedef const T*							const_pointer;
 		typedef rbtreeIterator						iterator;
 		typedef rbtreeIterator						const_iterator;
 		typedef reverseIterator<iterator>			reverse_iterator;
@@ -140,16 +140,6 @@ class rbtree {
 
 		Allocator	get_allocator() const { return _alloc; }
 
-		// Element access
-
-		T&	at(const T& value) {
-			iterator it = find(value);
-
-			if (it == end())
-				throw std::out_of_range("rbtree");
-			return *it;
-		}
-	
 		// Iterators
 
 		iterator	begin() {
@@ -246,8 +236,21 @@ class rbtree {
 			}
 		}
 
+		size_type	erase(const T& value) {
+			iterator it = find(value);
+
+			if (it == end())
+				return 0;
+			erase(it);
+			return 1;
+		}
+
 		// Lookup
 
+		size_type	count(const T& value) const {
+			return find(value) != end();
+		}
+	
 		iterator	find(const T& value) const {
 			Node*	p = root();
 			int		comp;
@@ -276,7 +279,7 @@ class rbtree {
 		}
 
 		friend bool operator< (const rbtree& lhs, const rbtree& rhs) {
-			return lhs.size() < rhs.size() || ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+			return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 		}
 
 		friend bool operator!=(const rbtree& lhs, const rbtree& rhs) { return !(lhs == rhs); }

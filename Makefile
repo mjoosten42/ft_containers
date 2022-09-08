@@ -43,7 +43,7 @@ re: fclean
 run: all
 	./$(NAME)
 
-TESTFILES = stack.cpp
+TESTFILES := set.cpp
 
 test:
 	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2

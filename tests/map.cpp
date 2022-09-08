@@ -36,17 +36,17 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 	const uint	size = sizeof(array) / sizeof(array[0]);
 
 	SECTION( "typedefs" ) {
-		static_assert(std::is_same<typename Map::key_type, TestType>::value, "");
-		static_assert(std::is_same<typename Map::mapped_type, std::string>::value, "");
-		static_assert(std::is_same<typename Map::value_type, ft::pair<const TestType, std::string> >::value, "");
-		static_assert(std::is_unsigned<typename Map::size_type>::value, "");
-		static_assert(std::is_signed<typename Map::difference_type>::value, "");
-		static_assert(std::is_same<typename Map::key_compare, std::less<TestType> >::value, "");
-		static_assert(std::is_same<typename Map::allocator_type, std::allocator<ft::pair<const TestType, std::string> > >::value, "");
-		static_assert(std::is_same<typename Map::reference, typename Map::value_type&>::value, "");
-		static_assert(std::is_same<typename Map::const_reference, const typename Map::value_type&>::value, "");
-		static_assert(std::is_same<typename Map::pointer, typename Map::value_type*>::value, "");
-		static_assert(std::is_same<typename Map::const_pointer, const typename Map::value_type*>::value, "");
+		static_assert(std::is_same<typename Map::key_type, TestType>::value, "key_type");
+		static_assert(std::is_same<typename Map::mapped_type, std::string>::value, "mapped_type");
+		static_assert(std::is_same<typename Map::value_type, ft::pair<const TestType, std::string> >::value, "value_type");
+		static_assert(std::is_unsigned<typename Map::size_type>::value, "size_type");
+		static_assert(std::is_signed<typename Map::difference_type>::value, "difference_type");
+		static_assert(std::is_same<typename Map::key_compare, std::less<TestType> >::value, "key_compare");
+		static_assert(std::is_same<typename Map::allocator_type, std::allocator<ft::pair<const TestType, std::string> > >::value, "allocator_type");
+		static_assert(std::is_same<typename Map::reference, typename Map::value_type&>::value, "reference");
+		static_assert(std::is_same<typename Map::const_reference, const typename Map::value_type&>::value, "const_reference");
+		static_assert(std::is_same<typename Map::pointer, typename Map::value_type*>::value, "pointer");
+		static_assert(std::is_same<typename Map::const_pointer, const typename Map::value_type*>::value, "const_pointer");
 	}
 
 	SECTION( "Constructors") {
