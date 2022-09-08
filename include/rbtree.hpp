@@ -274,6 +274,8 @@ class rbtree {
 		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
 		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
+		Compare	value_comp() const { return _comp; }
+
 		friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
 			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin()); 
 		}

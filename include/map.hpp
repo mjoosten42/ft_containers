@@ -60,7 +60,23 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 			return it->second;
 		}
 
+		const T&	at(const Key& key) const {
+			iterator it = base::find(ft::make_pair(key, T()));
+
+			if (it == base::end())
+				throw std::out_of_range("map");
+			return it->second;
+		}
+
 		T&	operator[](const Key& key) {
+			iterator it = base::find(ft::make_pair(key, T()));
+
+			if (it == base::end())
+				return base::insert(ft::make_pair(key, T())).first->second;
+			return it->second;	
+		}
+
+		const T&	operator[](const Key& key) const {
 			iterator it = base::find(ft::make_pair(key, T()));
 
 			if (it == base::end())
@@ -94,10 +110,6 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 
 		Compare	key_comp() const {
 			return Compare();
-		}
-
-		value_compare	value_comp() const {
-			return value_compare();
 		}
 };
 

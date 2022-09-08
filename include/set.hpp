@@ -23,11 +23,6 @@ class set: public rbtree<Key, Compare, Allocator> {
 		typedef Compare	key_compare;
 		typedef Compare	value_compare;
 
-		using typename base::size_type;
-		using typename base::iterator;
-		using base::end;
-		using base::erase;
-
 		set(): base() {}
 
 		explicit set(const Compare& comp, const Allocator& alloc = Allocator()): base(comp, alloc) {}
@@ -39,7 +34,6 @@ class set: public rbtree<Key, Compare, Allocator> {
 			: base(first, last, comp, alloc) {}
 
 		Compare	key_comp() const { return Compare(); }
-		Compare	value_comp() const { return Compare(); }
 };
 
 } // namespace ft
