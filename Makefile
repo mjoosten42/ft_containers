@@ -49,8 +49,8 @@ test:
 	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
 
 bm:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD -o bm
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -o bm
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD -o bm && ./bm
+	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -o bm && ./bm
 
 .PHONY = clean fclean re run test bm
 
