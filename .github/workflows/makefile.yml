@@ -9,19 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      run: make test TESTFILES=vector.cpp
+    - run: make test TESTFILES=vector.cpp
   stack:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      run: make test TESTFILES=stack.cpp
+    - run: make test TESTFILES=stack.cpp
   map:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      run: make test TESTFILES=map.cpp
+    - run: make test TESTFILES=map.cpp
   set:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      run: make test TESTFILES=set.cpp
+    - run: make test TESTFILES=set.cpp
