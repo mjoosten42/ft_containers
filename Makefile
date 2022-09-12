@@ -58,8 +58,8 @@ testall:
 	@for case in $(LIST) ; do make test CASE=$$case; done
 
 bm:
-	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) -D STD && ./a.out
-	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) && ./a.out
+	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) -D STD -o benchmark/std && ./benchmark/std > std.log
+	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) -o benchmark/ft && ./benchmark/ft > ft.log
 
 .PHONY = clean fclean re run test testall bm
 

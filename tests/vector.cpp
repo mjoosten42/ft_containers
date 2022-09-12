@@ -6,7 +6,7 @@
 #include <set>
 #include <sstream>
 
-#if STD
+#ifdef STD
 	#include <vector>
 	namespace ft = std;
 #else

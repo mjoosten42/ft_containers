@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <string>
 
-#define COUNT 1 << 16
+#define COUNT 1 << 8
 
 TEST_CASE( "vector", "[vector]") {
 	ft::vector<std::string>	v;
@@ -36,13 +36,13 @@ TEST_CASE( "vector", "[vector]") {
 
 	BENCHMARK( "insert" ) {
 		for (int i = 0; i < COUNT; i++)
-			v.insert(v.begin(), std::string(i, '-'));
+			v.insert(v.begin() + i / 2, std::string(i, '-'));
 		return v.empty();
 	};
 
 	BENCHMARK( "erase" ) {
-		while (v.size())
-			v.erase(v.begin());
+		for (int i = v.size(); i; i--)
+			v.erase(v.begin() + i / 2);
 		return v.empty();
 	};
 
