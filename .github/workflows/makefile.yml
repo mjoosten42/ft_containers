@@ -25,9 +25,3 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: make test CASE=set
-  benchmark:
-    needs: [vector, stack, map, set]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: make bm

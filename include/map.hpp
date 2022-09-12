@@ -29,12 +29,11 @@ class map: public rbtree<pair<const Key, T>, keyCompare<pair<const Key, T>, Comp
 		typedef rbtree<pair<const Key, T>, keyCompare<pair<const Key, T>, Compare>, Allocator>	base;
 	public:
 
-		typedef Key					key_type;
-		typedef T					mapped_type;
-		typedef	pair<const Key, T>	value_type;
-		typedef Compare				key_compare;
-
-		using value_compare = keyCompare<value_type, Compare>;
+		typedef Key								key_type;
+		typedef T								mapped_type;
+		typedef	pair<const Key, T>				value_type;
+		typedef Compare							key_compare;
+		typedef keyCompare<value_type, Compare> value_compare;
 
 		using typename base::size_type;
 		using typename base::iterator;
