@@ -17,7 +17,6 @@
 #include <cstdlib>
 #include <string>
 
-
 #define COUNT 1 << 16
 
 TEST_CASE( "vector", "[vector]") {

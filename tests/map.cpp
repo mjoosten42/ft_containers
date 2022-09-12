@@ -1,11 +1,12 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
-#if 0
+#if STD
 	#include <map>
 	namespace ft = std;
 #else
 	#include "map.hpp"
+	#include "pair.hpp"
 #endif
 
 #include <string>
@@ -21,6 +22,7 @@ struct myCompare {
 TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 	typedef typename ft::map<TestType, std::string>	Map;
 	typedef typename Map::iterator					Iter;
+	typedef typename ft::pair<Iter, bool>			Ret;
 
 	const ft::pair<TestType, std::string>	array[] = {
 		{ 8,  "h" },
@@ -199,10 +201,10 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		}
 
 		SECTION( "insert" ) {
-			Map						m;
-			Map						n;
-			ft::pair<Iter, bool>	p;
-			Iter					it;
+			Map		m;
+			Map		n;
+			Ret		p;
+			Iter	it;
 
 			p = m.insert(ft::make_pair(5, "E"));
 			REQUIRE( p.first->second == "E");

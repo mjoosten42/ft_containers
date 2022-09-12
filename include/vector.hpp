@@ -211,21 +211,6 @@ class vector {
 			std::swap(_size, other._size);
 			std::swap(_data, other._data);
 		}
-		
-		// Comparison operators
- 		
-		friend bool	operator==(const vector& lhs, const vector& rhs) {
-			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
-		}
-	
-		friend bool	operator< (const vector& lhs, const vector& rhs) {
-			return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-		}
-	
-		friend bool	operator!=(const vector& lhs, const vector& rhs) { return !(lhs == rhs); }
-		friend bool	operator> (const vector& lhs, const vector& rhs) { return   rhs <  lhs ; }
-		friend bool	operator<=(const vector& lhs, const vector& rhs) { return !(lhs >  rhs); }
-		friend bool	operator>=(const vector& lhs, const vector& rhs) { return !(lhs <  rhs); }
 
 	private:
 
@@ -296,6 +281,36 @@ class vector {
 		pointer		_data;
 
 }; // class vector
+
+template <typename T, typename Allocator>
+bool	operator==(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <typename T, typename Allocator>
+bool	operator< (const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template <typename T, typename Allocator>
+bool	operator!=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return !(lhs == rhs);
+}
+
+template <typename T, typename Allocator>
+bool	operator> (const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return   rhs <  lhs ;
+}
+
+template <typename T, typename Allocator>
+bool	operator<=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return !(lhs >  rhs);
+}
+
+template <typename T, typename Allocator>
+bool	operator>=(const vector<T, Allocator>& lhs, const vector<T, Allocator>& rhs) {
+	return !(lhs <  rhs);
+}
 
 } // namespace ft
 

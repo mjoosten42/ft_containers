@@ -1,11 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
-#include <queue>
-
-using std::deque;
-
-#if 0
+#if STD
 	#include <stack>
 	namespace ft = std;
 #else
@@ -14,13 +10,13 @@ using std::deque;
 
 #include "myInt.hpp"
 #include "myAllocator.hpp"
-
+#include <queue>
 
 TEMPLATE_TEST_CASE( "stack", "[int][myInt]", int, myInt ) {
 
-	typedef ft::vector<TestType>	Vec;
-	typedef ft::stack<TestType> 	Stack;
-	typedef deque<TestType>			Deque;
+	typedef ft::vector<TestType>		Vec;
+	typedef ft::stack<TestType, Vec> 	Stack;
+	typedef std::deque<TestType>		Deque;
 
 	Vec	v;
 

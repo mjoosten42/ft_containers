@@ -1,6 +1,6 @@
 NAME := ft_containers
 CXX := c++
-CXXFLAGS = -Wall -Werror -Wextra -Wpedantic -MMD -std=c++98
+CXXFLAGS = -Wall -Werror -Wextra -Wpedantic
 
 CXXFLAGS += -I/Users/mjoosten/.brew/opt/llvm/include
 LDFLAGS = -L/Users/mjoosten/.brew/opt/llvm/lib
@@ -10,10 +10,14 @@ ifdef DEBUG
 	LDFLAGS += -g -fsanitize=address
 endif
 
+ifdef STD
+	CXXFLAGS += -D STD
+endif
+
 INC = -I include
 
 SRCDIR = src
-SRC = main.cpp
+SRC = subject.cpp
 
 OBJDIR = obj
 OBJ = $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
@@ -26,7 +30,7 @@ $(NAME): $(OBJ)
 	$(CXX) $(LDFLAGS) $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< $(INC) -o $@
+	$(CXX) $(CXXFLAGS) -std=c++98 -MMD -c $< $(INC) -o $@
 
 $(OBJDIR):
 	mkdir -p $@
@@ -43,15 +47,20 @@ re: fclean
 run: all
 	./$(NAME)
 
-TESTFILES := vector.cpp
+CASE := map
 
 test:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic tests/$(TESTFILES) $(INC) -o catch2 && ./catch2
+	$(CXX) $(CXXFLAGS) tests/$(CASE).cpp $(INC) -o catch2 && ./catch2
+
+LIST = vector stack map set
+
+testall:
+	@for case in $(LIST) ; do make test CASE=$$case; done
 
 bm:
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) -D STD && ./a.out
-	$(CXX) -Wall -Werror -Wextra -Wpedantic benchmark/*.cpp $(INC) && ./a.out
+	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) -D STD && ./a.out
+	$(CXX) $(CXXFLAGS) benchmark/*.cpp $(INC) && ./a.out
 
-.PHONY = clean fclean re run test bm
+.PHONY = clean fclean re run test testall bm
 
 -include $(DEP)

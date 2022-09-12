@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch2.hpp"
 
-#if 0
+#if STD
 	#include <set>
 	namespace ft = std;
 #else
@@ -19,8 +19,9 @@ struct myCompare {
 };
 
 TEMPLATE_TEST_CASE( "set", "[set]", int, myInt ) {
-	typedef typename ft::set<TestType>	Set;
-	typedef typename Set::iterator		Iter;
+	typedef typename ft::set<TestType>		Set;
+	typedef typename Set::iterator			Iter;
+	typedef typename ft::pair<Iter, bool>	Ret;
 
 	const TestType	array[] = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
 	const uint		size = sizeof(array) / sizeof(array[0]);
@@ -160,10 +161,10 @@ TEMPLATE_TEST_CASE( "set", "[set]", int, myInt ) {
 		}
 
 		SECTION( "insert" ) {
-			Set						s;
-			Set						t;
-			ft::pair<Iter, bool>	p;
-			Iter					it;
+			Set		s;
+			Set		t;
+			Ret		p;
+			Iter	it;
 
 			p = s.insert(5);
 			REQUIRE( *p.first == 5);

@@ -2,14 +2,16 @@
 #define RBTREE_HPP
 
 	// https://www.cs.usfca.edu/~galles/visualization/RedBlack.html
+	// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html
+	// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 
 #include <functional> // std::less
 #include <memory> // std::allocator
 #include <algorithm> // std::lower/upper bound
 #include <iterator> // bidirectional_iterator_tag
-#include "iterator.hpp" // reverseIterator
+#include "iterator.hpp"
 #include "pair.hpp"
-#include "meta.hpp" // equal
+#include "meta.hpp"
 
 namespace ft
 {
@@ -36,6 +38,8 @@ class rbtree {
 			Node*& 		operator[](bool dir) { return dir ? right : left; }
 			Node*const&	operator[](bool dir) const { return dir ? right : left; }
 		};
+	
+		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 		struct rbtreeIterator {
 			typedef std::bidirectional_iterator_tag	iterator_category;
@@ -79,14 +83,11 @@ class rbtree {
 			bool	operator==(const rbtreeIterator& rhs) { return _p == rhs._p; }
 			bool	operator!=(const rbtreeIterator& rhs) { return _p != rhs._p; }
 
-			// Implicit conversion
 			operator Node*() const { return _p; }
 
 			private:
 				Node*	_p;
 		};
-
-		typedef typename Allocator::template rebind<Node>::other	NodeAllocator;
 
 	public:
 
@@ -131,7 +132,7 @@ class rbtree {
 				_alloc.deallocate(_sentinel, 1);
 			}
 			_alloc = rhs.get_allocator();
-			_comp = rhs._comp; // value_comp()?
+			_comp = rhs.value_comp();
 			_sentinel = newSentinel();
 			_size = 0;
 			insert(rhs.begin(), rhs.end());
@@ -187,7 +188,7 @@ class rbtree {
 			std::swap(_size, other._size);
 		}
 
-		ft::pair<iterator, bool>	insert(const T& value) {
+		pair<iterator, bool>	insert(const T& value) {
 			if (empty())
 				return ft::make_pair(insertHere(_sentinel, LEFT, value), true);
 			return insertAt(root(), value);
@@ -264,30 +265,17 @@ class rbtree {
 			return end();
 		}
 		
-		ft::pair<iterator, iterator>
+		pair<iterator, iterator>
 					equal_range(const T& value) { return ft::make_pair(lower_bound(value), upper_bound(value)); }
 		iterator	lower_bound(const T& value) { return std::lower_bound(begin(), end(), value, _comp); }
 		iterator	upper_bound(const T& value) { return std::upper_bound(begin(), end(), value, _comp); }
 	
-		ft::pair<const_iterator, const_iterator>
+		pair<const_iterator, const_iterator>
 						equal_range(const T& value) const { return ft::make_pair(lower_bound(value), upper_bound(value)); }
 		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
 		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
 
 		Compare	value_comp() const { return _comp; }
-
-		friend bool operator==(const rbtree& lhs, const rbtree& rhs) {
-			return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin()); 
-		}
-
-		friend bool operator< (const rbtree& lhs, const rbtree& rhs) {
-			return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-		}
-
-		friend bool operator!=(const rbtree& lhs, const rbtree& rhs) { return !(lhs == rhs); }
-		friend bool operator> (const rbtree& lhs, const rbtree& rhs) { return   rhs <  lhs ; }
-		friend bool operator<=(const rbtree& lhs, const rbtree& rhs) { return !(lhs >  rhs); }
-		friend bool operator>=(const rbtree& lhs, const rbtree& rhs) { return !(lhs <  rhs); }
 
 	protected:
 
@@ -299,8 +287,7 @@ class rbtree {
 			return EQUAL;
 		};
 
-		ft::pair<iterator, bool>	insertAt(Node* p, const T& value) {		
-			// Check if we are the correct subtree
+		pair<iterator, bool>	insertAt(Node* p, const T& value) {		
 			if (p != root())
 				if (compare(value, p->parent->value) != parentsSide(p))
 					return insertAt(p->parent, value);
@@ -319,8 +306,6 @@ class rbtree {
 			_size++;
 			return iterator((*parent)[dir]);
 		}
-	
-		// https://adtinfo.org/libavl.html/Inserting-an-RB-Node-Step-3-_002d-Rebalance.html
 
 		// p is parent of newly inserted node
 		void	rebalanceInsertion(Node *p) {
@@ -354,8 +339,6 @@ class rbtree {
 			(*p)[!side]->color = Red;
 			p->color = Black;
 		}
-
-		// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 
 		void	rebalanceDeletion(Node* p) {
 			if (isRed(p) || p == root())
@@ -492,6 +475,36 @@ class rbtree {
 		Node*			_sentinel;
 		size_type		_size;
 };
+
+template <typename T, typename Compare, typename Allocator>
+bool operator==(const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return lhs.size() == rhs.size() && ft::equal(lhs.begin(), lhs.end(), rhs.begin()); 
+}
+
+template <typename T, typename Compare, typename Allocator>
+bool operator< (const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
+template <typename T, typename Compare, typename Allocator>
+bool operator!=(const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return !(lhs == rhs);
+}
+
+template <typename T, typename Compare, typename Allocator>
+bool operator> (const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return   rhs <  lhs ;
+}
+
+template <typename T, typename Compare, typename Allocator>
+bool operator<=(const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return !(lhs >  rhs);
+}
+
+template <typename T, typename Compare, typename Allocator>
+bool operator>=(const rbtree<T, Compare, Allocator>& lhs, const rbtree<T, Compare, Allocator>& rhs) {
+	return !(lhs <  rhs);
+}
 
 } // namespace ft
 

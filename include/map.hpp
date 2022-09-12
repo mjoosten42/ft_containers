@@ -19,24 +19,22 @@ class keyCompare {
 			return mComp(pair1.first, pair2.first);
 		}
 
-	private:
 		Compare	mComp;
 };
 
 template <	typename Key, typename T,
 			typename Compare = std::less<Key>,
-			typename Allocator = std::allocator<ft::pair<const Key, T> > >
-class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, T>, Compare>, Allocator> {
-
-		typedef keyCompare<ft::pair<const Key, T>, Compare>					value_compare;
-		typedef rbtree<ft::pair<const Key, T>, value_compare, Allocator>	base;
-
+			typename Allocator = std::allocator<pair<const Key, T> > >
+class map: public rbtree<pair<const Key, T>, keyCompare<pair<const Key, T>, Compare>, Allocator> {
+		typedef rbtree<pair<const Key, T>, keyCompare<pair<const Key, T>, Compare>, Allocator>	base;
 	public:
 
-		typedef Key						key_type;
-		typedef T						mapped_type;
-		typedef	ft::pair<const Key, T>	value_type;
-		typedef Compare					key_compare;
+		typedef Key					key_type;
+		typedef T					mapped_type;
+		typedef	pair<const Key, T>	value_type;
+		typedef Compare				key_compare;
+
+		using value_compare = keyCompare<value_type, Compare>;
 
 		using typename base::size_type;
 		using typename base::iterator;
@@ -69,19 +67,7 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 		}
 
 		T&	operator[](const Key& key) {
-			iterator it = base::find(ft::make_pair(key, T()));
-
-			if (it == base::end())
-				return base::insert(ft::make_pair(key, T())).first->second;
-			return it->second;	
-		}
-
-		const T&	operator[](const Key& key) const {
-			iterator it = base::find(ft::make_pair(key, T()));
-
-			if (it == base::end())
-				return base::insert(ft::make_pair(key, T())).first->second;
-			return it->second;	
+			return base::insert(ft::make_pair(key, T())).first->second;
 		}
 
 		size_type	erase(const Key& key) {
@@ -96,7 +82,7 @@ class map: public rbtree<ft::pair<const Key, T>, keyCompare<ft::pair<const Key, 
 			return base::count(ft::make_pair(key, T()));
 		}
 
-		ft::pair<iterator, iterator>	equal_range(const Key& key) const {
+		pair<iterator, iterator>	equal_range(const Key& key) const {
 			return base::equal_range(ft::make_pair(key, T()));
 		}
 

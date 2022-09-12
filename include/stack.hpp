@@ -15,31 +15,31 @@ class stack {
 		typedef typename Container::reference		reference;
 		typedef typename Container::const_reference	const_reference;
 	
-		explicit	stack(const Container& cont = Container()): _cont(cont) {}
+		explicit	stack(const Container& cont = Container()): c(cont) {}
 		stack(const stack& rhs) { *this = rhs; }
 		~stack() {};
-		stack&	operator=(const stack& rhs) { _cont = rhs._cont; return *this; }
+		stack&	operator=(const stack& rhs) { c = rhs.c; return *this; }
 
-		reference		top() { return _cont.back(); }
-		const_reference	top() const { return _cont.back(); }
+		reference		top() { return c.back(); }
+		const_reference	top() const { return c.back(); }
 	
-		size_type	size() const { return _cont.size(); }
-		size_type	empty() const { return _cont.empty(); }
+		size_type	size() const { return c.size(); }
+		size_type	empty() const { return c.empty(); }
 	
-		void	push(const T& value) { _cont.push_back(value); }
-		void	pop() { _cont.pop_back(); }
-		
-		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs._cont == rhs._cont; }
-		friend bool	operator!=(const stack& lhs, const stack& rhs) { return lhs._cont != rhs._cont; }
-		friend bool	operator< (const stack& lhs, const stack& rhs) { return lhs._cont <  rhs._cont; }
-		friend bool	operator<=(const stack& lhs, const stack& rhs) { return lhs._cont <= rhs._cont; }
-		friend bool	operator> (const stack& lhs, const stack& rhs) { return lhs._cont >  rhs._cont; }
-		friend bool	operator>=(const stack& lhs, const stack& rhs) { return lhs._cont >= rhs._cont; }
+		void	push(const T& value) { c.push_back(value); }
+		void	pop() { c.pop_back(); }
+
+		friend bool	operator==(const stack& lhs, const stack& rhs) { return lhs.c == rhs.c; }
+		friend bool	operator!=(const stack& lhs, const stack& rhs) { return lhs.c != rhs.c; }
+		friend bool	operator< (const stack& lhs, const stack& rhs) { return lhs.c <  rhs.c; }
+		friend bool	operator<=(const stack& lhs, const stack& rhs) { return lhs.c <= rhs.c; }
+		friend bool	operator> (const stack& lhs, const stack& rhs) { return lhs.c >  rhs.c; }
+		friend bool	operator>=(const stack& lhs, const stack& rhs) { return lhs.c >= rhs.c; }
 	
-	private:
-		Container	_cont;
+	protected:
+		Container	c;
 };
-
+		
 } // namespace ft
 
 #endif // STACK_HPP
