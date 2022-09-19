@@ -34,29 +34,46 @@ class vector {
 	
 		vector(): _capacity(0), _size(0), _data(NULL) {}
 		explicit	vector(const Allocator& alloc): _allocator(alloc), _capacity(0), _size(0), _data(NULL) {}
-		explicit	vector(const vector& rhs): _capacity(0), _size(0), _data(NULL) { *this = rhs; }
-
-		//	Initialize with n values
-		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
-			: _allocator(alloc), _capacity(n), _size(n), _data(_allocator.allocate(n)) {
-			std::uninitialized_fill_n(begin(), n, value);
+		explicit	vector(const vector& rhs)
+				: _allocator(rhs.get_allocator()), _capacity(rhs.size()), _size(rhs.size()), _data(_allocator.allocate(rhs.size())) {
+			try	{
+				std::uninitialized_copy(rhs.begin(), rhs.end(), begin());	
+			}
+			catch(...) {
+				_allocator.deallocate(_data, capacity());
+				throw;
+			}
 		}
 
-		//	Range constructor
+		explicit	vector(size_type n, const T& value = T(), const Allocator& alloc = Allocator())
+				: _allocator(alloc), _capacity(n), _size(n), _data(_allocator.allocate(n)) {
+			try	{
+				std::uninitialized_fill_n(begin(), n, value);
+			}
+			catch(...) {
+				_allocator.deallocate(_data, capacity());
+				throw;
+			}
+		}
+
 		template <typename InputIt>
 		vector(InputIt first, InputIt last, const Allocator& alloc = Allocator(),
-				typename ft::enable_if<!ft::is_integral<InputIt>::value, bool>::type = true)
-			: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
-			insert(begin(), first, last);
+			typename ft::enable_if<!ft::is_integral<InputIt>::value, bool>::type = true)
+				: _allocator(alloc), _capacity(0), _size(0), _data(NULL) {
+			try	{
+				insert(begin(), first, last);
+			}
+			catch(...) {
+				_allocator.deallocate(_data, capacity());
+				throw;
+			}
 		}
 
-		//	Destructor
 		~vector() {
 			clear();
-			_allocator.deallocate(_data, _capacity);
+			_allocator.deallocate(_data, capacity());
 		};
 	
-		// Copy assignment
 		vector&	operator=(const vector& rhs) {
 			if (this == &rhs)
 				return *this;
@@ -238,11 +255,10 @@ class vector {
 			}
 		}
 	
-		// InputIt
 		template <typename InputIt>
 		void	doInsert(iterator pos, InputIt first, InputIt last, std::input_iterator_tag) {
-			size_type	index = pos - begin();
-			vector<T>	tmp;
+			size_type				index = pos - begin();
+			vector<T, Allocator>	tmp;
 
 			for (; first != last; first++)
 				tmp.push_back(*first);
@@ -251,9 +267,8 @@ class vector {
 			_size += tmp.size();
 		}
 
-		// ForwardIt && BiDirectionalIt
-		template <typename InputIt>
-		void	doInsert(iterator pos, InputIt first, InputIt last, std::forward_iterator_tag) {
+		template <typename ForwardIt>
+		void	doInsert(iterator pos, ForwardIt first, ForwardIt last, std::forward_iterator_tag) {
 			size_type	index = pos - begin();
 			size_type	size = std::distance(first, last);
 		
@@ -262,9 +277,8 @@ class vector {
 			_size += size;
 		}
 	
-		// RandomAccessIt && ContigiousIt
-		template <typename InputIt>
-		void	doInsert(iterator pos, InputIt first, InputIt last, std::random_access_iterator_tag) {
+		template <typename RandomAccessIt>
+		void	doInsert(iterator pos, RandomAccessIt first, RandomAccessIt last, std::random_access_iterator_tag) {
 			size_type	index = pos - begin();
 			size_type	size = last - first;
 		

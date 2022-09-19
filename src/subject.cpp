@@ -2,7 +2,7 @@
 #include <string>
 #include <deque>
 
-#if STD //CREATE A REAL STL EXAMPLE
+#ifdef STD //CREATE A REAL STL EXAMPLE
 	#include <map>
 	#include <stack>
 	#include <vector>

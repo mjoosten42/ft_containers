@@ -36,6 +36,7 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		{ 13, "e" }
 	};
 	const uint	size = sizeof(array) / sizeof(array[0]);
+	const uint	random = 1 << 8;
 
 	SECTION( "typedefs" ) {
 		static_assert(std::is_same<typename Map::key_type, TestType>::value, "key_type");
@@ -164,6 +165,10 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 
 		for (; crit != crite; crit++)
 			REQUIRE( crit->second == "42");
+
+		it = m.begin();
+		cit = m.begin();
+		REQUIRE( it == cit);
 	}
 
 	SECTION( "Capacity" ) {
@@ -343,5 +348,20 @@ TEMPLATE_TEST_CASE( "map", "[map]", int, myInt ) {
 		std::swap(m, n);
 		REQUIRE( m.begin()->second == "d");
 		REQUIRE( n.begin()->second == "a");
+	}
+
+	SECTION( "random" ) {
+		Map		m;
+		Iter	it;
+
+		srand(time(NULL));
+		for (int i = rand() % random; i; i--) {
+			if (rand() & 1) {
+				it = m.insert(ft::make_pair(i, "")).first;
+				REQUIRE( it->first == i);
+			}
+			else
+				m.erase(i);
+		}
 	}
 }

@@ -25,6 +25,7 @@ TEMPLATE_TEST_CASE( "set", "[set]", int, myInt ) {
 
 	const TestType	array[] = { 8, 3, 1, 6, 4, 7, 10, 14, 13 };
 	const uint		size = sizeof(array) / sizeof(array[0]);
+	const uint		random = 1 << 8;
 
 	SECTION( "typedefs" ) {
 		static_assert(std::is_same<typename Set::key_type, TestType>::value, "key_type");
@@ -124,6 +125,10 @@ TEMPLATE_TEST_CASE( "set", "[set]", int, myInt ) {
 		typename Set::const_reverse_iterator	crite = s.rend();
 
 		REQUIRE(*std::find(crit, crite, 13) == 13);
+	
+		it = s.begin();
+		cit = s.begin();
+		REQUIRE( it == cit);
 	}
 
 	SECTION( "Capacity" ) {
@@ -302,5 +307,17 @@ TEMPLATE_TEST_CASE( "set", "[set]", int, myInt ) {
 		std::swap(s, t);
 		REQUIRE( *s.begin() == 4);
 		REQUIRE( *t.begin() == 1);
+	}
+
+	SECTION( "random" ) {
+		Set	s;
+
+		srand(time(NULL));
+		for (int i = rand() % random; i; i--) {
+			if (rand() & 1)
+				s.insert(i);
+			else
+				s.erase(i);
+		}
 	}
 }

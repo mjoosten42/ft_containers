@@ -291,6 +291,12 @@ TEMPLATE_TEST_CASE( "vector", "[int][myInt]", int, myInt ) {
 		w.pop_back();
 
 		REQUIRE( w.begin() == w.end());
+
+		w.push_back(42);
+	
+		it = w.begin();
+		cit = w.begin();
+		REQUIRE(it == cit);
 	}
 
 	SECTION ("Capacity" ) {

@@ -301,10 +301,13 @@ class rbtree {
 		}
 
 		iterator	insertHere(Node* parent, bool dir, const T& value) {
+			iterator it;
+		
 			(*parent)[dir] = newNode(value, parent);
+			it = iterator((*parent)[dir]);
 			rebalanceInsertion(parent);
 			_size++;
-			return iterator((*parent)[dir]);
+			return it;
 		}
 
 		// p is parent of newly inserted node
@@ -413,7 +416,13 @@ class rbtree {
 		Node*	newNode(const T& value, Node* parent) {
 			Node*	tmp = _alloc.allocate(1);
 
-			_alloc.construct(tmp, value);
+			try {
+				_alloc.construct(tmp, value);
+			}
+			catch(...) {
+				_alloc.deallocate(tmp, 1);
+				throw;
+			}
 			tmp->parent = parent;
 			return tmp;
 		}
