@@ -12,9 +12,9 @@ namespace ft
 template <	typename Key,
 			typename Compare = std::less<Key>,
 			typename Allocator = std::allocator<Key> >
-class set: public rbtree<Key, Compare, Allocator> {
+class set: public rbtree<Key, Key, Compare, Allocator> {
 
-		typedef rbtree<Key, Compare, Allocator>	base;
+		typedef rbtree<Key, Key, Compare, Allocator>	base;
 
 	public:
 
@@ -32,8 +32,8 @@ class set: public rbtree<Key, Compare, Allocator> {
 				const Compare& comp = Compare(),
 				const Allocator& alloc = Allocator())
 			: base(first, last, comp, alloc) {}
-
-		Compare	key_comp() const { return Compare(); }
+	
+		Compare	value_comp() const { return Compare(); }
 };
 
 } // namespace ft

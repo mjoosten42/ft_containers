@@ -23,7 +23,7 @@ namespace ft
 
 enum Color { Red, Black };
 
-template <typename T, typename Compare = std::less<T>, typename Allocator = std::allocator<T> >
+template <typename Key, typename T, typename Compare = std::less<Key>, typename Allocator = std::allocator<T> >
 class rbtree {
 	protected:
 		struct Node {
@@ -132,7 +132,7 @@ class rbtree {
 				_alloc.deallocate(_sentinel, 1);
 			}
 			_alloc = rhs.get_allocator();
-			_comp = rhs.value_comp();
+			_comp = rhs.key_comp();
 			_sentinel = newSentinel();
 			_size = 0;
 			insert(rhs.begin(), rhs.end());
@@ -237,8 +237,8 @@ class rbtree {
 			}
 		}
 
-		size_type	erase(const T& value) {
-			iterator it = find(value);
+		size_type	erase(const Key& key) {
+			iterator it = find(key);
 
 			if (it == end())
 				return 0;
@@ -248,51 +248,76 @@ class rbtree {
 
 		// Lookup
 
-		size_type	count(const T& value) const {
-			return find(value) != end();
+		size_type	count(const Key& key) const {
+			return find(key) != end();
 		}
 	
-		iterator	find(const T& value) const {
+		iterator	find(const Key& key) const {
 			Node*	p = root();
 			int		comp;
 		
 			while (p) {
-				comp = compare(value, p->value);
+				comp = compare(extractKey(key), extractKey(p->value));
 				if (comp == EQUAL)
 					return iterator(p);
 				p = (*p)[comp];
 			}
 			return end();
 		}
-		
+
+		iterator	lower_bound(const Key& key) {
+			for (iterator it = begin(); it != end(); ++it)
+				if (compare(extractKey(key), extractKey(*it)) != RIGHT)
+					return it;
+			return end();
+		}
+
+		iterator	upper_bound(const Key& key) {
+			for (iterator it = begin(); it != end(); ++it)
+				if (compare(extractKey(key), extractKey(*it)) == LEFT)
+					return it;
+			return end();
+		}
+
+		const_iterator	lower_bound(const Key& key) const {
+			for (iterator it = begin(); it != end(); ++it)
+				if (compare(extractKey(key), extractKey(*it)) == LEFT)
+					return it;
+			return end();
+		}
+
+		const_iterator	upper_bound(const Key& key) const {
+			for (iterator it = begin(); it != end(); ++it)
+				if (compare(extractKey(key), extractKey(*it)) != RIGHT)
+					return it;
+			return end();
+		}
+
+
 		pair<iterator, iterator>
-					equal_range(const T& value) { return ft::make_pair(lower_bound(value), upper_bound(value)); }
-		iterator	lower_bound(const T& value) { return std::lower_bound(begin(), end(), value, _comp); }
-		iterator	upper_bound(const T& value) { return std::upper_bound(begin(), end(), value, _comp); }
-	
+			equal_range(const Key& key) { return ft::make_pair(lower_bound(key), upper_bound(key)); }
+
 		pair<const_iterator, const_iterator>
-						equal_range(const T& value) const { return ft::make_pair(lower_bound(value), upper_bound(value)); }
-		const_iterator	lower_bound(const T& value) const { return std::lower_bound(begin(), end(), value, _comp); }
-		const_iterator	upper_bound(const T& value) const { return std::upper_bound(begin(), end(), value, _comp); }
+			equal_range(const Key& key) const { return ft::make_pair(lower_bound(key), upper_bound(key)); }
 
-		Compare	value_comp() const { return _comp; }
+		Compare	key_comp() const { return _comp; }
 
-	protected:
+	private:
 
-		int	compare(const T& value1, const T& value2) const {
-			if (_comp(value1, value2))
+		int	compare(const Key& key1, const Key& key2) const {
+			if (_comp(key1, key2))
 				return LEFT;
-			if (_comp(value2, value1))
+			if (_comp(key2, key1))
 				return RIGHT;
 			return EQUAL;
 		};
 
 		pair<iterator, bool>	insertAt(Node* p, const T& value) {		
 			if (p != root())
-				if (compare(value, p->parent->value) != parentsSide(p))
+				if (compare(extractKey(value), extractKey(p->parent->value)) != parentsSide(p))
 					return insertAt(p->parent, value);
 				
-			int	comp = compare(value, p->value);
+			int	comp = compare(extractKey(value), extractKey(p->value));
 			if (comp == EQUAL)
 				return ft::make_pair(iterator(p), false);
 			if ((*p)[comp])
@@ -468,6 +493,16 @@ class rbtree {
 			destroySubtree(node->left);
 			destroySubtree(node->right);
 			deleteNode(node);
+		}
+
+		const Key&	extractKey(const Key& key) const {
+			return key;
+		}
+	
+		template <typename U>
+		typename enable_if<!std::is_same<Key, U>::value && std::is_convertible<U, T>::value, const Key&>::type	
+		extractKey(const U& pair) const {
+			return pair.first;
 		}
 
 		Node*	sibling(Node* node) const { return node->parent->left == node ? node->parent->right : node->parent->left; }
